@@ -2,7 +2,7 @@
   "use strict";
 
   const STORAGE_KEY = "l-manager:data:v1";
-  const APP_VERSION = "0.1.2";
+  const APP_VERSION = "0.1.3";
   const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const MONTH_FORMAT = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" });
   const DATE_FORMAT = new Intl.DateTimeFormat("ru", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
@@ -31,6 +31,7 @@
     habitName: document.querySelector("#habitName"),
     habitTrackingType: document.querySelector("#habitTrackingType"),
     habitTarget: document.querySelector("#habitTarget"),
+    habitBooleanTarget: document.querySelector("#habitBooleanTarget"),
     habitUnit: document.querySelector("#habitUnit"),
     habitColor: document.querySelector("#habitColor"),
     habitColorText: document.querySelector("#habitColorText"),
@@ -121,6 +122,7 @@
 
     els.habitTrackingType.addEventListener("change", syncTrackingFields);
     els.habitTarget.addEventListener("input", syncTrackingFields);
+    els.habitBooleanTarget.addEventListener("change", syncTrackingFields);
     els.habitColor.addEventListener("input", () => {
       els.habitColorText.value = els.habitColor.value.toUpperCase();
     });
@@ -174,10 +176,13 @@
     const monthEntries = getHabitMonthEntries(habit.id, viewDate);
     const stats = computeHabitStats(habit, monthEntries);
     const isNegativeTarget = habit.trackingType === "target" && Number(habit.target) === 0;
+    const booleanTarget = getBooleanTarget(habit);
     const meta = habit.trackingType === "percent"
       ? "Manual percentage · no upper limit"
       : habit.trackingType === "boolean"
-        ? "Yes / No"
+        ? booleanTarget === 0
+          ? `<span class="negative-target-badge">Negative habit</span> · Daily target: No`
+          : `<span class="positive-target-badge">Positive habit</span> · Daily target: Yes`
         : isNegativeTarget
           ? `<span class="negative-target-badge">Negative target</span> · Target: 0${habit.unit ? ` ${escapeHtml(habit.unit)}` : ""} / day`
           : `Target: ${formatNumber(habit.target)}${habit.unit ? ` ${escapeHtml(habit.unit)}` : ""} / day`;
@@ -198,7 +203,7 @@
           <div class="habit-actions">
             <div class="habit-kpis">
               <div class="habit-kpi"><span>avg</span><strong>${stats.average == null ? "—" : `${formatPercent(stats.average)}%`}</strong></div>
-              <div class="habit-kpi"><span>${habit.trackingType === "boolean" ? "yes" : "100%+"}</span><strong>${stats.hitTarget}</strong></div>
+              <div class="habit-kpi"><span>${habit.trackingType === "boolean" ? "success" : "100%+"}</span><strong>${stats.hitTarget}</strong></div>
               <div class="habit-kpi"><span>tracked</span><strong>${stats.tracked}</strong></div>
             </div>
             <button class="icon-button edit-habit" type="button" data-edit-habit="${habit.id}" aria-label="Edit ${escapeHtml(habit.name)}">•••</button>
@@ -284,7 +289,8 @@
 
     els.habitName.value = habit?.name || "";
     els.habitTrackingType.value = habit?.trackingType || "target";
-    els.habitTarget.value = habit?.target ?? 1;
+    els.habitTarget.value = habit?.trackingType === "target" ? (habit.target ?? 1) : 1;
+    els.habitBooleanTarget.value = habit?.trackingType === "boolean" ? String(getBooleanTarget(habit)) : "1";
     els.habitUnit.value = habit?.unit || "";
     els.habitColor.value = habit?.color || "#7C5CFC";
     els.habitColorText.value = (habit?.color || "#7C5CFC").toUpperCase();
@@ -295,16 +301,24 @@
 
   function syncTrackingFields() {
     const type = els.habitTrackingType.value;
-    const needsTarget = type === "target";
-    els.targetValueField.hidden = !needsTarget;
-    els.unitField.hidden = !needsTarget;
-    els.habitTarget.required = needsTarget;
+    const isTarget = type === "target";
+    const isBoolean = type === "boolean";
+    els.targetValueField.hidden = type === "percent";
+    els.unitField.hidden = !isTarget;
+    els.habitTarget.hidden = !isTarget;
+    els.habitBooleanTarget.hidden = !isBoolean;
+    els.habitTarget.required = isTarget;
+
     const targetValue = Number(els.habitTarget.value);
-    const isNegativeTarget = type === "target" && els.habitTarget.value !== "" && targetValue === 0;
+    const isNegativeTarget = isTarget && els.habitTarget.value !== "" && targetValue === 0;
+    const booleanTarget = Number(els.habitBooleanTarget.value);
+
     els.trackingHint.textContent = type === "percent"
       ? "Вводишь процент напрямую. Можно записать 0%, 124%, 500% или любое другое неотрицательное значение."
-      : type === "boolean"
-        ? "Для каждого дня выбираешь только Yes или No. Пустой день остаётся отдельным состоянием — без записи."
+      : isBoolean
+        ? booleanTarget === 0
+          ? "Negative habit: Daily target = No. День считается успешным, когда фактический результат — No; Yes считается нарушением."
+          : "Positive habit: Daily target = Yes. День считается успешным, когда фактический результат — Yes; No считается невыполнением."
         : isNegativeTarget
           ? "Negative target: идеальный результат — 0. Если за день значение 0, это 100%; любое значение выше 0 считается нарушением (0%)."
           : "Вводишь фактическое значение — процент считается автоматически. Верхнего лимита нет.";
@@ -323,12 +337,13 @@
       return;
     }
 
+    const booleanTarget = Number(els.habitBooleanTarget.value) === 0 ? 0 : 1;
     const habit = {
       id,
       name: els.habitName.value.trim(),
       trackingType,
-      target: trackingType === "target" ? target : 100,
-      negativeTarget: trackingType === "target" && target === 0,
+      target: trackingType === "target" ? target : trackingType === "boolean" ? booleanTarget : 100,
+      negativeTarget: trackingType === "target" ? target === 0 : trackingType === "boolean" ? booleanTarget === 0 : false,
       unit: trackingType === "target" ? els.habitUnit.value.trim() : trackingType === "percent" ? "%" : "",
       color,
       createdAt: state.habits.find((item) => item.id === id)?.createdAt || new Date().toISOString(),
@@ -414,7 +429,13 @@
     }
     if (habit.trackingType === "boolean") {
       const selected = els.booleanEntry.dataset.value;
-      els.entryPercentPreview.textContent = selected === "1" ? "Yes" : selected === "0" ? "No" : "—";
+      if (selected !== "1" && selected !== "0") {
+        els.entryPercentPreview.textContent = "—";
+        return;
+      }
+      const value = Number(selected);
+      const success = value === getBooleanTarget(habit);
+      els.entryPercentPreview.textContent = `${value === 1 ? "Yes" : "No"} · ${success ? "100%" : "0%"}`;
       return;
     }
     const value = Number(els.entryValue.value);
@@ -470,10 +491,16 @@
     showToast("Day cleared");
   }
 
+  function getBooleanTarget(habit) {
+    if (habit?.trackingType !== "boolean") return 1;
+    // v0.1.1/v0.1.2 boolean habits stored target=100. Treat them as positive habits for compatibility.
+    return Number(habit.target) === 0 ? 0 : 1;
+  }
+
   function getEntryPercent(habit, entry) {
     if (!entry) return null;
     if (habit.trackingType === "percent") return Number(entry.value) || 0;
-    if (habit.trackingType === "boolean") return Number(entry.value) === 1 ? 100 : 0;
+    if (habit.trackingType === "boolean") return Number(entry.value) === getBooleanTarget(habit) ? 100 : 0;
     if (Number(habit.target) === 0) return Number(entry.value) === 0 ? 100 : 0;
     return ((Number(entry.value) || 0) / habit.target) * 100;
   }
