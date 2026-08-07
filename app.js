@@ -331,15 +331,32 @@
 
   function renderAllHabitsHeatmap(date) {
     // A compact matrix: one row per habit, one square per day.
-    // No aggregate daily score is calculated here; every cell belongs to one habit only.
-    const daysToShow = 42;
-    const now = new Date();
-    const isCurrentMonth = date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
-    const reference = isCurrentMonth ? now : new Date(date.getFullYear(), date.getMonth() + 1, 0);
-    reference.setHours(12, 0, 0, 0);
+    // Fresh trackers start at the first recorded day so unused cells appear AFTER the data.
+    // Once there is more history than fits, the matrix becomes a rolling recent window.
+    const daysToShow = 28;
+    const today = new Date();
+    today.setHours(12, 0, 0, 0);
 
-    const start = new Date(reference);
-    start.setDate(reference.getDate() - (daysToShow - 1));
+    const trackedDateKeys = Object.keys(state.entries)
+      .map((key) => key.slice(key.lastIndexOf("|") + 1))
+      .filter((key) => /^\d{4}-\d{2}-\d{2}$/.test(key))
+      .sort();
+
+    let start;
+    if (trackedDateKeys.length) {
+      const firstTracked = fromDateKey(trackedDateKeys[0]);
+      firstTracked.setHours(12, 0, 0, 0);
+      const elapsedDays = Math.floor((today - firstTracked) / 86400000);
+
+      if (elapsedDays < daysToShow) {
+        start = firstTracked;
+      } else {
+        start = new Date(today);
+        start.setDate(today.getDate() - (daysToShow - 1));
+      }
+    } else {
+      start = new Date(today);
+    }
 
     const rows = state.habits.map((habit) => {
       const cells = [];
@@ -351,8 +368,9 @@
         const entry = state.entries[entryKey(habit.id, dateKey)];
 
         if (!entry) {
-          const tooltip = `${habit.name} · ${DATE_FORMAT.format(day)} · no data`;
-          cells.push(`<span class="habit-matrix-cell is-empty" title="${escapeHtml(tooltip)}" aria-label="${escapeHtml(tooltip)}"></span>`);
+          const future = day > today;
+          const tooltip = `${habit.name} · ${DATE_FORMAT.format(day)} · ${future ? "future" : "no data"}`;
+          cells.push(`<span class="habit-matrix-cell is-empty${future ? " is-future" : ""}" title="${escapeHtml(tooltip)}" aria-label="${escapeHtml(tooltip)}"></span>`);
           continue;
         }
 

@@ -505,28 +505,29 @@ button { color: inherit; }
 }
 
 
-/* v0.2.2 — per-habit contribution matrix */
+/* v0.2.3 — compact per-habit history matrix */
 .all-habits-heatmap-block {
   margin: 12px 14px 0;
   padding-bottom: 2px;
+  min-width: 0;
 }
 .habit-matrix-scroll {
-  max-width: 100%;
-  overflow-x: auto;
+  width: 100%;
+  overflow: hidden;
   padding: 2px 0 4px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,.12) transparent;
 }
 .habit-matrix {
   display: grid;
   gap: 5px;
-  min-width: max-content;
+  width: 100%;
+  min-width: 0;
 }
 .habit-matrix-row {
   display: grid;
-  grid-template-columns: 78px auto;
+  grid-template-columns: minmax(58px, 72px) minmax(0, 1fr);
   gap: 7px;
   align-items: center;
+  min-width: 0;
 }
 .habit-matrix-label {
   display: flex;
@@ -553,13 +554,16 @@ button { color: inherit; }
 }
 .habit-matrix-cells {
   display: grid;
-  grid-template-columns: repeat(42, 8px);
+  grid-template-columns: repeat(28, minmax(0, 1fr));
   gap: 2px;
+  width: 100%;
+  min-width: 0;
 }
 .habit-matrix-cell {
   display: block;
-  width: 8px;
-  height: 8px;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  min-width: 0;
   border-radius: 2px;
   border: 1px solid rgba(255,255,255,.035);
   transition: transform 110ms ease, border-color 110ms ease, filter 110ms ease;
@@ -567,11 +571,15 @@ button { color: inherit; }
 .habit-matrix-cell.is-empty {
   background: rgba(255,255,255,.035);
 }
+.habit-matrix-cell.is-future {
+  background: rgba(255,255,255,.018);
+  border-color: rgba(255,255,255,.022);
+}
 .habit-matrix-cell.has-value {
   background: var(--matrix-cell-bg);
 }
 .habit-matrix-cell:hover {
-  transform: scale(1.35);
+  transform: scale(1.28);
   border-color: rgba(255,255,255,.48);
   filter: brightness(1.12);
   z-index: 3;
