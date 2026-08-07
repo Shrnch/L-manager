@@ -2,7 +2,7 @@
   "use strict";
 
   const STORAGE_KEY = "l-manager:data:v1";
-  const APP_VERSION = "0.2.4";
+  const APP_VERSION = "0.3.0";
   const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const MONTH_FORMAT = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" });
   const DATE_FORMAT = new Intl.DateTimeFormat("ru", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
@@ -11,6 +11,9 @@
   let viewDate = startOfMonth(new Date());
   let toastTimer = null;
   let selectedHabitId = null;
+  let relationHabitAId = null;
+  let relationHabitBId = null;
+  let relationMode = "overlay";
 
   const els = {
     habitList: document.querySelector("#habitList"),
@@ -31,6 +34,12 @@
     habitTrendChart: document.querySelector("#habitTrendChart"),
     trendCaption: document.querySelector("#trendCaption"),
     habitComparison: document.querySelector("#habitComparison"),
+    relationHabitA: document.querySelector("#relationHabitA"),
+    relationHabitB: document.querySelector("#relationHabitB"),
+    relationOverlayBtn: document.querySelector("#relationOverlayBtn"),
+    relationScatterBtn: document.querySelector("#relationScatterBtn"),
+    relationMeta: document.querySelector("#relationMeta"),
+    relationChart: document.querySelector("#relationChart"),
 
     habitModal: document.querySelector("#habitModal"),
     habitForm: document.querySelector("#habitForm"),
@@ -156,6 +165,23 @@
       renderInsights();
       syncSelectedHabitCard();
     });
+
+    els.relationHabitA.addEventListener("change", () => {
+      relationHabitAId = els.relationHabitA.value;
+      ensureRelationHabits();
+      renderRelations();
+    });
+    els.relationHabitB.addEventListener("change", () => {
+      relationHabitBId = els.relationHabitB.value;
+      ensureRelationHabits();
+      renderRelations();
+    });
+    [els.relationOverlayBtn, els.relationScatterBtn].forEach((button) => {
+      button.addEventListener("click", () => {
+        relationMode = button.dataset.relationMode;
+        renderRelations();
+      });
+    });
   }
 
   function render() {
@@ -166,6 +192,8 @@
 
     if (state.habits.length === 0) {
       selectedHabitId = null;
+      relationHabitAId = null;
+      relationHabitBId = null;
       els.habitList.innerHTML = "";
       els.monthSummary.innerHTML = `
         <div class="summary-item"><span>habits</span><strong>0</strong></div>
@@ -319,6 +347,7 @@
     els.allHabitsHeatmap.innerHTML = renderAllHabitsHeatmap(viewDate);
     els.trendCaption.textContent = `${MONTH_FORMAT.format(viewDate)} · target line at 100%`;
     els.habitTrendChart.innerHTML = renderTrendChart(habit, viewDate);
+    renderRelations();
     els.habitComparison.innerHTML = renderHabitComparison(viewDate);
     els.habitComparison.querySelectorAll("[data-comparison-habit]").forEach((button) => {
       button.addEventListener("click", () => {
@@ -499,6 +528,256 @@
         ${xLabels}
         ${empty}
       </svg>`;
+  }
+
+  function ensureRelationHabits() {
+    if (!state.habits.length) {
+      relationHabitAId = null;
+      relationHabitBId = null;
+      return;
+    }
+
+    if (!state.habits.some((habit) => habit.id === relationHabitAId)) {
+      relationHabitAId = state.habits.some((habit) => habit.id === selectedHabitId)
+        ? selectedHabitId
+        : state.habits[0].id;
+    }
+
+    if (!state.habits.some((habit) => habit.id === relationHabitBId) || (relationHabitBId === relationHabitAId && state.habits.length > 1)) {
+      relationHabitBId = state.habits.find((habit) => habit.id !== relationHabitAId)?.id || relationHabitAId;
+    }
+  }
+
+  function renderRelations() {
+    if (!els.relationChart || !state.habits.length) return;
+    ensureRelationHabits();
+
+    const habitA = state.habits.find((habit) => habit.id === relationHabitAId);
+    const habitB = state.habits.find((habit) => habit.id === relationHabitBId);
+    if (!habitA || !habitB) return;
+
+    const options = state.habits.map((habit) => `<option value="${habit.id}">${escapeHtml(habit.name)}</option>`).join("");
+    els.relationHabitA.innerHTML = options;
+    els.relationHabitB.innerHTML = options;
+    els.relationHabitA.value = habitA.id;
+    els.relationHabitB.value = habitB.id;
+    els.relationHabitB.disabled = state.habits.length < 2;
+
+    els.relationOverlayBtn.classList.toggle("selected", relationMode === "overlay");
+    els.relationScatterBtn.classList.toggle("selected", relationMode === "scatter");
+
+    if (state.habits.length < 2) {
+      els.relationMeta.innerHTML = `<span class="relation-empty">Add a second habit to compare relationships.</span>`;
+      els.relationChart.innerHTML = `<div class="relation-empty-chart">Two habits are needed</div>`;
+      return;
+    }
+
+    const paired = getPairedRelationData(habitA, habitB, viewDate);
+    const correlation = pearsonCorrelation(paired.map((item) => item.rawA), paired.map((item) => item.rawB));
+    const correlationText = Number.isFinite(correlation) ? `${correlation >= 0 ? "+" : ""}${correlation.toFixed(2)}` : "—";
+    const relationLabel = describeCorrelation(correlation);
+
+    els.relationMeta.innerHTML = `
+      <div class="relation-legend">
+        <span><i style="--relation-color:${habitA.color}"></i>${escapeHtml(habitA.name)}</span>
+        <span><i style="--relation-color:${habitB.color}"></i>${escapeHtml(habitB.name)}</span>
+      </div>
+      <div class="relation-correlation" title="Pearson correlation across days where both habits were tracked">
+        <span>r</span><strong>${correlationText}</strong><em>${escapeHtml(relationLabel)}</em><small>${paired.length} shared days</small>
+      </div>`;
+
+    els.relationChart.innerHTML = relationMode === "scatter"
+      ? renderRelationScatter(habitA, habitB, paired)
+      : renderRelationOverlay(habitA, habitB, viewDate);
+  }
+
+  function getPairedRelationData(habitA, habitB, date) {
+    const days = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+    const paired = [];
+    for (let day = 1; day <= days; day += 1) {
+      const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      const entryA = state.entries[entryKey(habitA.id, dateKey)];
+      const entryB = state.entries[entryKey(habitB.id, dateKey)];
+      if (!entryA || !entryB) continue;
+      const rawA = getRelationRawValue(habitA, entryA);
+      const rawB = getRelationRawValue(habitB, entryB);
+      if (!Number.isFinite(rawA) || !Number.isFinite(rawB)) continue;
+      paired.push({ day, dateKey, entryA, entryB, rawA, rawB, percentA: getEntryPercent(habitA, entryA), percentB: getEntryPercent(habitB, entryB) });
+    }
+    return paired;
+  }
+
+  function getRelationRawValue(habit, entry) {
+    if (!entry) return null;
+    return Number(entry.value);
+  }
+
+  function getRelationUnit(habit) {
+    if (habit.trackingType === "boolean") return "Yes/No";
+    if (habit.trackingType === "percent") return "%";
+    return habit.unit || "value";
+  }
+
+  function describeCorrelation(value) {
+    if (!Number.isFinite(value)) return "not enough variation";
+    const magnitude = Math.abs(value);
+    const strength = magnitude >= 0.75 ? "strong" : magnitude >= 0.45 ? "moderate" : magnitude >= 0.2 ? "weak" : "little";
+    if (magnitude < 0.2) return `${strength} relation`;
+    return `${strength} ${value < 0 ? "inverse" : "positive"}`;
+  }
+
+  function pearsonCorrelation(xs, ys) {
+    if (xs.length !== ys.length || xs.length < 2) return null;
+    const n = xs.length;
+    const meanX = xs.reduce((sum, value) => sum + value, 0) / n;
+    const meanY = ys.reduce((sum, value) => sum + value, 0) / n;
+    let numerator = 0;
+    let sumX = 0;
+    let sumY = 0;
+    for (let i = 0; i < n; i += 1) {
+      const dx = xs[i] - meanX;
+      const dy = ys[i] - meanY;
+      numerator += dx * dy;
+      sumX += dx * dx;
+      sumY += dy * dy;
+    }
+    const denominator = Math.sqrt(sumX * sumY);
+    return denominator > 0 ? numerator / denominator : null;
+  }
+
+  function renderRelationOverlay(habitA, habitB, date) {
+    const width = 336;
+    const height = 205;
+    const pad = { left: 34, right: 10, top: 20, bottom: 25 };
+    const days = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+    const series = [habitA, habitB].map((habit) => {
+      const values = [];
+      for (let day = 1; day <= days; day += 1) {
+        const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+        const entry = state.entries[entryKey(habit.id, dateKey)];
+        values.push(entry ? getEntryPercent(habit, entry) : null);
+      }
+      return { habit, values };
+    });
+    const finite = series.flatMap((item) => item.values).filter((value) => value != null && Number.isFinite(value));
+    const highest = finite.length ? Math.max(...finite, 100) : 100;
+    const yMax = Math.max(100, Math.ceil(highest / 50) * 50);
+    const innerW = width - pad.left - pad.right;
+    const innerH = height - pad.top - pad.bottom;
+    const xFor = (index) => pad.left + (days === 1 ? 0 : (index / (days - 1)) * innerW);
+    const yFor = (value) => pad.top + innerH - (Math.max(0, Math.min(value, yMax)) / yMax) * innerH;
+
+    const tickValues = [...new Set([0, yMax / 2, 100, yMax])].sort((a, b) => a - b);
+    const grids = tickValues.map((tick) => {
+      const y = yFor(tick);
+      const isTarget = Math.abs(tick - 100) < 0.001;
+      return `<line x1="${pad.left}" y1="${y.toFixed(2)}" x2="${width - pad.right}" y2="${y.toFixed(2)}" class="chart-grid${isTarget ? " chart-target-line" : ""}" />
+        <text x="${pad.left - 7}" y="${(y + 3).toFixed(2)}" text-anchor="end" class="chart-axis-label">${formatPercent(tick)}%</text>`;
+    }).join("");
+
+    const paths = series.map(({ habit, values }) => {
+      const segments = [];
+      let current = [];
+      values.forEach((value, index) => {
+        if (value == null || !Number.isFinite(value)) {
+          if (current.length) segments.push(current);
+          current = [];
+        } else current.push(`${xFor(index).toFixed(2)},${yFor(value).toFixed(2)}`);
+      });
+      if (current.length) segments.push(current);
+      const lines = segments.map((segment) => segment.length > 1
+        ? `<polyline points="${segment.join(" ")}" fill="none" stroke="${habit.color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".92" />`
+        : "").join("");
+      const points = values.map((value, index) => value == null || !Number.isFinite(value) ? "" :
+        `<circle cx="${xFor(index).toFixed(2)}" cy="${yFor(value).toFixed(2)}" r="2.6" fill="${habit.color}" stroke="#111319" stroke-width="1.3"><title>${escapeHtml(habit.name)} · day ${index + 1}: ${formatPercent(value)}%</title></circle>`).join("");
+      return lines + points;
+    }).join("");
+
+    const midDay = Math.ceil(days / 2);
+    const xLabels = [1, midDay, days].map((day) => `<text x="${xFor(day - 1).toFixed(2)}" y="${height - 6}" text-anchor="middle" class="chart-axis-label">${day}</text>`).join("");
+    const empty = finite.length === 0 ? `<text x="${width / 2}" y="${height / 2}" text-anchor="middle" class="chart-empty-label">No tracked data yet</text>` : "";
+
+    return `<div class="relation-chart-caption">Overlay uses % of target so habits with different units share one scale.</div>
+      <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Overlay comparison of ${escapeHtml(habitA.name)} and ${escapeHtml(habitB.name)}">
+        ${grids}${paths}${xLabels}${empty}
+      </svg>`;
+  }
+
+  function renderRelationScatter(habitA, habitB, paired) {
+    const width = 336;
+    const height = 220;
+    const pad = { left: 42, right: 18, top: 16, bottom: 36 };
+    if (!paired.length) {
+      return `<div class="relation-chart-caption">Scatter uses actual values from days where both habits were tracked.</div><div class="relation-empty-chart">No shared tracked days this month</div>`;
+    }
+
+    const xs = paired.map((item) => item.rawA);
+    const ys = paired.map((item) => item.rawB);
+    const xMin = Math.min(0, ...xs);
+    const yMin = Math.min(0, ...ys);
+    const xMaxRaw = Math.max(...xs);
+    const yMaxRaw = Math.max(...ys);
+    const xMax = xMaxRaw === xMin ? xMin + 1 : xMaxRaw * 1.08 || 1;
+    const yMax = yMaxRaw === yMin ? yMin + 1 : yMaxRaw * 1.08 || 1;
+    const innerW = width - pad.left - pad.right;
+    const innerH = height - pad.top - pad.bottom;
+    const xFor = (value) => pad.left + ((value - xMin) / (xMax - xMin)) * innerW;
+    const yFor = (value) => pad.top + innerH - ((value - yMin) / (yMax - yMin)) * innerH;
+
+    const grid = [0, .5, 1].map((factor) => {
+      const x = pad.left + factor * innerW;
+      const y = pad.top + factor * innerH;
+      const xValue = xMin + factor * (xMax - xMin);
+      const yValue = yMax - factor * (yMax - yMin);
+      return `<line x1="${x.toFixed(2)}" y1="${pad.top}" x2="${x.toFixed(2)}" y2="${height - pad.bottom}" class="chart-grid" />
+        <line x1="${pad.left}" y1="${y.toFixed(2)}" x2="${width - pad.right}" y2="${y.toFixed(2)}" class="chart-grid" />
+        <text x="${x.toFixed(2)}" y="${height - pad.bottom + 13}" text-anchor="middle" class="chart-axis-label">${formatCompactAxis(xValue)}</text>
+        <text x="${pad.left - 7}" y="${(y + 3).toFixed(2)}" text-anchor="end" class="chart-axis-label">${formatCompactAxis(yValue)}</text>`;
+    }).join("");
+
+    const dots = paired.map((item) => {
+      const labelA = formatRelationRaw(habitA, item.rawA);
+      const labelB = formatRelationRaw(habitB, item.rawB);
+      return `<circle cx="${xFor(item.rawA).toFixed(2)}" cy="${yFor(item.rawB).toFixed(2)}" r="4" fill="${habitB.color}" stroke="${habitA.color}" stroke-width="1.8" opacity=".92"><title>Day ${item.day} · ${escapeHtml(habitA.name)}: ${escapeHtml(labelA)} · ${escapeHtml(habitB.name)}: ${escapeHtml(labelB)}</title></circle>`;
+    }).join("");
+
+    let regression = "";
+    if (paired.length >= 2) {
+      const meanX = xs.reduce((a, b) => a + b, 0) / xs.length;
+      const meanY = ys.reduce((a, b) => a + b, 0) / ys.length;
+      const denominator = xs.reduce((sum, x) => sum + (x - meanX) ** 2, 0);
+      if (denominator > 0) {
+        const slope = xs.reduce((sum, x, index) => sum + (x - meanX) * (ys[index] - meanY), 0) / denominator;
+        const intercept = meanY - slope * meanX;
+        const rx1 = Math.min(...xs);
+        const rx2 = Math.max(...xs);
+        const ry1 = slope * rx1 + intercept;
+        const ry2 = slope * rx2 + intercept;
+        regression = `<line x1="${xFor(rx1).toFixed(2)}" y1="${yFor(ry1).toFixed(2)}" x2="${xFor(rx2).toFixed(2)}" y2="${yFor(ry2).toFixed(2)}" class="relation-regression" />`;
+      }
+    }
+
+    return `<div class="relation-chart-caption">Each dot is one day · actual values · trend line shows direction, not causation.</div>
+      <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Scatter plot comparing ${escapeHtml(habitA.name)} and ${escapeHtml(habitB.name)}">
+        ${grid}${regression}${dots}
+        <text x="${pad.left + innerW / 2}" y="${height - 7}" text-anchor="middle" class="relation-axis-title">${escapeHtml(habitA.name)} · ${escapeHtml(getRelationUnit(habitA))}</text>
+        <text x="11" y="${pad.top + innerH / 2}" text-anchor="middle" class="relation-axis-title" transform="rotate(-90 11 ${pad.top + innerH / 2})">${escapeHtml(habitB.name)} · ${escapeHtml(getRelationUnit(habitB))}</text>
+      </svg>`;
+  }
+
+  function formatRelationRaw(habit, value) {
+    if (habit.trackingType === "boolean") return value === 1 ? "Yes" : "No";
+    if (habit.trackingType === "percent") return `${formatPercent(value)}%`;
+    return `${formatNumber(value)}${habit.unit ? ` ${habit.unit}` : ""}`;
+  }
+
+  function formatCompactAxis(value) {
+    const abs = Math.abs(value);
+    if (abs >= 1000000) return `${(value / 1000000).toFixed(abs >= 10000000 ? 0 : 1)}m`;
+    if (abs >= 1000) return `${(value / 1000).toFixed(abs >= 10000 ? 0 : 1)}k`;
+    if (abs >= 100) return String(Math.round(value));
+    if (abs >= 10) return value.toFixed(0);
+    return value.toFixed(1).replace(/\.0$/, "");
   }
 
   function renderHabitComparison(date) {

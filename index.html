@@ -94,6 +94,34 @@
             <div id="habitTrendChart" class="habit-trend-chart"></div>
           </section>
 
+          <section class="insight-section relation-section">
+            <div class="insight-section-heading">
+              <div>
+                <h3>Relations</h3>
+                <p>Compare two habits on the same days</p>
+              </div>
+            </div>
+
+            <div class="relation-controls">
+              <label class="relation-select">
+                <span>A</span>
+                <select id="relationHabitA"></select>
+              </label>
+              <label class="relation-select">
+                <span>B</span>
+                <select id="relationHabitB"></select>
+              </label>
+            </div>
+
+            <div class="relation-mode-switch" role="group" aria-label="Relation visualization mode">
+              <button class="relation-mode-button selected" id="relationOverlayBtn" type="button" data-relation-mode="overlay">Overlay</button>
+              <button class="relation-mode-button" id="relationScatterBtn" type="button" data-relation-mode="scatter">Scatter</button>
+            </div>
+
+            <div id="relationMeta" class="relation-meta"></div>
+            <div id="relationChart" class="habit-trend-chart relation-chart"></div>
+          </section>
+
           <section class="insight-section">
             <div class="insight-section-heading">
               <div>
