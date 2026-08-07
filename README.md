@@ -1,4 +1,4 @@
-# L manager v0.2.0
+# L manager v0.2.1
 
 Local-first habit / life tracker inspired by the old spreadsheet workflow.
 
@@ -6,7 +6,7 @@ Local-first habit / life tracker inspired by the old spreadsheet workflow.
 
 Open `index.html` in a modern browser. No server, npm install, account, or internet connection is required.
 
-## What is in v0.2.0
+## What is in v0.2.1
 
 - Empty start: no old habits are preloaded.
 - Create, edit and delete habits.
@@ -41,9 +41,15 @@ Existing Yes / No habits created in v0.1.1 or v0.1.2 are treated as **Positive h
 Use **Export** regularly if you want a portable backup.
 
 
-## v0.2.0
+## v0.2.1
 - Right-side visualization panel
 - Daily progress line chart for the selected habit
 - 100% target reference line with support for values above 100%
 - Monthly habit comparison bars
 - Best streak, average, and target-hit summary
+
+
+## v0.2.1
+- Added a compact GitHub-style heatmap in the right sidebar.
+- Each square represents one day across all habits; shade intensity reflects the average completion of tracked habits on that day.
+- Hover a square to see the date, average percentage, and how many habits were tracked.

@@ -2,7 +2,7 @@
   "use strict";
 
   const STORAGE_KEY = "l-manager:data:v1";
-  const APP_VERSION = "0.2.0";
+  const APP_VERSION = "0.2.1";
   const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const MONTH_FORMAT = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" });
   const DATE_FORMAT = new Intl.DateTimeFormat("ru", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
@@ -26,6 +26,7 @@
     importInput: document.querySelector("#importInput"),
     insightsPanel: document.querySelector("#insightsPanel"),
     visualHabitSelect: document.querySelector("#visualHabitSelect"),
+    allHabitsHeatmap: document.querySelector("#allHabitsHeatmap"),
     insightKpis: document.querySelector("#insightKpis"),
     habitTrendChart: document.querySelector("#habitTrendChart"),
     trendCaption: document.querySelector("#trendCaption"),
@@ -315,6 +316,7 @@
       <div class="insight-kpi"><span>${successLabel}</span><strong>${stats.hitTarget}</strong></div>
       <div class="insight-kpi"><span>best streak</span><strong>${bestStreak}${bestStreak === 1 ? " day" : " days"}</strong></div>`;
 
+    els.allHabitsHeatmap.innerHTML = renderAllHabitsHeatmap(viewDate);
     els.trendCaption.textContent = `${MONTH_FORMAT.format(viewDate)} · target line at 100%`;
     els.habitTrendChart.innerHTML = renderTrendChart(habit, viewDate);
     els.habitComparison.innerHTML = renderHabitComparison(viewDate);
@@ -325,6 +327,52 @@
         syncSelectedHabitCard();
       });
     });
+  }
+
+  function renderAllHabitsHeatmap(date) {
+    const weeks = 20;
+    const now = new Date();
+    const isCurrentMonth = date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
+    const reference = isCurrentMonth ? now : new Date(date.getFullYear(), date.getMonth() + 1, 0);
+    const mondayOffset = (reference.getDay() + 6) % 7;
+    const currentWeekMonday = new Date(reference.getFullYear(), reference.getMonth(), reference.getDate() - mondayOffset);
+    const start = new Date(currentWeekMonday);
+    start.setDate(currentWeekMonday.getDate() - (weeks - 1) * 7);
+
+    const cells = [];
+    for (let index = 0; index < weeks * 7; index += 1) {
+      const day = new Date(start);
+      day.setDate(start.getDate() + index);
+      const dateKey = toDateKey(day);
+      const values = [];
+
+      for (const habit of state.habits) {
+        const entry = state.entries[entryKey(habit.id, dateKey)];
+        if (!entry) continue;
+        const percent = getEntryPercent(habit, entry);
+        if (Number.isFinite(percent)) values.push(percent);
+      }
+
+      const average = values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
+      const level = average == null
+        ? 0
+        : average <= 0
+          ? 1
+          : average < 34
+            ? 2
+            : average < 67
+              ? 3
+              : average < 100
+                ? 4
+                : 5;
+      const tooltip = average == null
+        ? `${DATE_FORMAT.format(day)} · no tracked habits`
+        : `${DATE_FORMAT.format(day)} · ${formatPercent(average)}% avg · ${values.length}/${state.habits.length} tracked`;
+
+      cells.push(`<span class="heatmap-cell heatmap-level-${level}" title="${escapeHtml(tooltip)}" aria-label="${escapeHtml(tooltip)}"></span>`);
+    }
+
+    return cells.join("");
   }
 
   function renderTrendChart(habit, date) {
