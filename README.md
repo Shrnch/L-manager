@@ -1,4 +1,4 @@
-# L manager v0.1.1
+# L manager v0.1.2
 
 Local-first habit / life tracker inspired by the old spreadsheet workflow.
 
@@ -6,7 +6,7 @@ Local-first habit / life tracker inspired by the old spreadsheet workflow.
 
 Open `index.html` in a modern browser. No server, npm install, account, or internet connection is required.
 
-## What is in v0.1.1
+## What is in v0.1.2
 
 - Empty start: no old habits are preloaded.
 - Create, edit and delete habits.
@@ -32,6 +32,10 @@ Data is saved to browser `localStorage` under:
 Use **Export** regularly if you want a portable backup.
 
 
-## v0.1.1
+## v0.1.2
 - Added a Yes / No tracking type for binary habits.
 - Yes counts as 100%, No as 0%, while an empty day remains untracked.
+
+
+### Negative target
+For a Target value habit, set Daily target to `0` to mark it as **Negative target**. A tracked value of `0` counts as 100% success; any value above `0` counts as 0%.

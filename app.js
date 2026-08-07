@@ -2,7 +2,7 @@
   "use strict";
 
   const STORAGE_KEY = "l-manager:data:v1";
-  const APP_VERSION = "0.1.1";
+  const APP_VERSION = "0.1.2";
   const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const MONTH_FORMAT = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" });
   const DATE_FORMAT = new Intl.DateTimeFormat("ru", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
@@ -120,6 +120,7 @@
     });
 
     els.habitTrackingType.addEventListener("change", syncTrackingFields);
+    els.habitTarget.addEventListener("input", syncTrackingFields);
     els.habitColor.addEventListener("input", () => {
       els.habitColorText.value = els.habitColor.value.toUpperCase();
     });
@@ -172,11 +173,14 @@
     const calendar = getCalendarDays(viewDate);
     const monthEntries = getHabitMonthEntries(habit.id, viewDate);
     const stats = computeHabitStats(habit, monthEntries);
+    const isNegativeTarget = habit.trackingType === "target" && Number(habit.target) === 0;
     const meta = habit.trackingType === "percent"
       ? "Manual percentage · no upper limit"
       : habit.trackingType === "boolean"
         ? "Yes / No"
-        : `Target: ${formatNumber(habit.target)}${habit.unit ? ` ${escapeHtml(habit.unit)}` : ""} / day`;
+        : isNegativeTarget
+          ? `<span class="negative-target-badge">Negative target</span> · Target: 0${habit.unit ? ` ${escapeHtml(habit.unit)}` : ""} / day`
+          : `Target: ${formatNumber(habit.target)}${habit.unit ? ` ${escapeHtml(habit.unit)}` : ""} / day`;
 
     const weekdays = WEEKDAYS.map((day) => `<div class="weekday">${day}</div>`).join("");
     const cells = calendar.map((date) => renderDayCell(habit, date)).join("");
@@ -295,11 +299,15 @@
     els.targetValueField.hidden = !needsTarget;
     els.unitField.hidden = !needsTarget;
     els.habitTarget.required = needsTarget;
+    const targetValue = Number(els.habitTarget.value);
+    const isNegativeTarget = type === "target" && els.habitTarget.value !== "" && targetValue === 0;
     els.trackingHint.textContent = type === "percent"
       ? "Вводишь процент напрямую. Можно записать 0%, 124%, 500% или любое другое неотрицательное значение."
       : type === "boolean"
         ? "Для каждого дня выбираешь только Yes или No. Пустой день остаётся отдельным состоянием — без записи."
-        : "Вводишь фактическое значение — процент считается автоматически. Верхнего лимита нет.";
+        : isNegativeTarget
+          ? "Negative target: идеальный результат — 0. Если за день значение 0, это 100%; любое значение выше 0 считается нарушением (0%)."
+          : "Вводишь фактическое значение — процент считается автоматически. Верхнего лимита нет.";
   }
 
   function saveHabitFromForm(event) {
@@ -310,8 +318,8 @@
     const color = normalizeHex(els.habitColorText.value) || els.habitColor.value;
 
     if (!els.habitName.value.trim()) return;
-    if (trackingType === "target" && (!Number.isFinite(target) || target <= 0)) {
-      showToast("Target must be greater than zero");
+    if (trackingType === "target" && (!Number.isFinite(target) || target < 0)) {
+      showToast("Target cannot be negative");
       return;
     }
 
@@ -320,6 +328,7 @@
       name: els.habitName.value.trim(),
       trackingType,
       target: trackingType === "target" ? target : 100,
+      negativeTarget: trackingType === "target" && target === 0,
       unit: trackingType === "target" ? els.habitUnit.value.trim() : trackingType === "percent" ? "%" : "",
       color,
       createdAt: state.habits.find((item) => item.id === id)?.createdAt || new Date().toISOString(),
@@ -413,7 +422,11 @@
       els.entryPercentPreview.textContent = "—";
       return;
     }
-    const percent = habit.trackingType === "percent" ? value : (value / habit.target) * 100;
+    const percent = habit.trackingType === "percent"
+      ? value
+      : Number(habit.target) === 0
+        ? (value === 0 ? 100 : 0)
+        : (value / habit.target) * 100;
     els.entryPercentPreview.textContent = `${formatPercent(percent)}%`;
   }
 
@@ -461,7 +474,8 @@
     if (!entry) return null;
     if (habit.trackingType === "percent") return Number(entry.value) || 0;
     if (habit.trackingType === "boolean") return Number(entry.value) === 1 ? 100 : 0;
-    return habit.target > 0 ? ((Number(entry.value) || 0) / habit.target) * 100 : 0;
+    if (Number(habit.target) === 0) return Number(entry.value) === 0 ? 100 : 0;
+    return ((Number(entry.value) || 0) / habit.target) * 100;
   }
 
   function computeHabitStats(habit, monthEntries) {
