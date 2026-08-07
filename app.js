@@ -2,7 +2,7 @@
   "use strict";
 
   const STORAGE_KEY = "l-manager:data:v1";
-  const APP_VERSION = "0.1.3";
+  const APP_VERSION = "0.1.5";
   const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const MONTH_FORMAT = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" });
   const DATE_FORMAT = new Intl.DateTimeFormat("ru", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
@@ -388,9 +388,7 @@
     els.entryValue.value = habit.trackingType === "boolean" ? "" : (entry?.value ?? "");
     els.entryNote.value = entry?.note || "";
     els.clearEntryBtn.hidden = !entry;
-    els.entryValueField.hidden = habit.trackingType === "boolean";
-    els.booleanEntry.hidden = habit.trackingType !== "boolean";
-    els.entryValue.required = habit.trackingType !== "boolean";
+    syncEntryTrackingFields(habit);
     els.booleanEntry.dataset.value = habit.trackingType === "boolean" && entry ? String(Number(entry.value) === 1 ? 1 : 0) : "";
     syncBooleanButtons();
 
@@ -407,6 +405,21 @@
     updateEntryPreview();
     openModal(els.entryModal);
     setTimeout(() => els.entryValue.focus(), 30);
+  }
+
+
+  function syncEntryTrackingFields(habit) {
+    const isBoolean = habit.trackingType === "boolean";
+
+    // Keep the two day-entry UIs mutually exclusive.
+    // We set both `hidden` and an inline display value so this remains correct
+    // even if an older cached stylesheet has rules that override [hidden].
+    els.entryValueField.hidden = isBoolean;
+    els.entryValueField.style.display = isBoolean ? "none" : "flex";
+    els.entryValue.required = !isBoolean;
+
+    els.booleanEntry.hidden = !isBoolean;
+    els.booleanEntry.style.display = isBoolean ? "grid" : "none";
   }
 
   function setBooleanEntry(value) {

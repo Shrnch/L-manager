@@ -1,4 +1,4 @@
-# L manager v0.1.3
+# L manager v0.1.5
 
 Local-first habit / life tracker inspired by the old spreadsheet workflow.
 
@@ -6,7 +6,7 @@ Local-first habit / life tracker inspired by the old spreadsheet workflow.
 
 Open `index.html` in a modern browser. No server, npm install, account, or internet connection is required.
 
-## What is in v0.1.3
+## What is in v0.1.5
 
 - Empty start: no old habits are preloaded.
 - Create, edit and delete habits.
