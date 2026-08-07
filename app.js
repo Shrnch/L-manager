@@ -2,7 +2,7 @@
   "use strict";
 
   const STORAGE_KEY = "l-manager:data:v1";
-  const APP_VERSION = "0.2.1";
+  const APP_VERSION = "0.2.2";
   const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const MONTH_FORMAT = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" });
   const DATE_FORMAT = new Intl.DateTimeFormat("ru", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
@@ -330,49 +330,57 @@
   }
 
   function renderAllHabitsHeatmap(date) {
-    const weeks = 20;
+    // A compact matrix: one row per habit, one square per day.
+    // No aggregate daily score is calculated here; every cell belongs to one habit only.
+    const daysToShow = 42;
     const now = new Date();
     const isCurrentMonth = date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
     const reference = isCurrentMonth ? now : new Date(date.getFullYear(), date.getMonth() + 1, 0);
-    const mondayOffset = (reference.getDay() + 6) % 7;
-    const currentWeekMonday = new Date(reference.getFullYear(), reference.getMonth(), reference.getDate() - mondayOffset);
-    const start = new Date(currentWeekMonday);
-    start.setDate(currentWeekMonday.getDate() - (weeks - 1) * 7);
+    reference.setHours(12, 0, 0, 0);
 
-    const cells = [];
-    for (let index = 0; index < weeks * 7; index += 1) {
-      const day = new Date(start);
-      day.setDate(start.getDate() + index);
-      const dateKey = toDateKey(day);
-      const values = [];
+    const start = new Date(reference);
+    start.setDate(reference.getDate() - (daysToShow - 1));
 
-      for (const habit of state.habits) {
+    const rows = state.habits.map((habit) => {
+      const cells = [];
+
+      for (let index = 0; index < daysToShow; index += 1) {
+        const day = new Date(start);
+        day.setDate(start.getDate() + index);
+        const dateKey = toDateKey(day);
         const entry = state.entries[entryKey(habit.id, dateKey)];
-        if (!entry) continue;
+
+        if (!entry) {
+          const tooltip = `${habit.name} · ${DATE_FORMAT.format(day)} · no data`;
+          cells.push(`<span class="habit-matrix-cell is-empty" title="${escapeHtml(tooltip)}" aria-label="${escapeHtml(tooltip)}"></span>`);
+          continue;
+        }
+
         const percent = getEntryPercent(habit, entry);
-        if (Number.isFinite(percent)) values.push(percent);
+        const background = colorForPercent(habit.color, percent);
+        let resultText;
+        if (habit.trackingType === "boolean") {
+          resultText = Number(entry.value) === 1 ? "Yes" : "No";
+        } else if (habit.trackingType === "percent") {
+          resultText = `${formatPercent(percent)}%`;
+        } else {
+          resultText = `${formatNumber(entry.value)}${habit.unit ? ` ${habit.unit}` : ""} · ${formatPercent(percent)}%`;
+        }
+        const tooltip = `${habit.name} · ${DATE_FORMAT.format(day)} · ${resultText}`;
+        cells.push(`<span class="habit-matrix-cell has-value" style="--matrix-cell-bg:${background}; --matrix-cell-color:${habit.color}" title="${escapeHtml(tooltip)}" aria-label="${escapeHtml(tooltip)}"></span>`);
       }
 
-      const average = values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
-      const level = average == null
-        ? 0
-        : average <= 0
-          ? 1
-          : average < 34
-            ? 2
-            : average < 67
-              ? 3
-              : average < 100
-                ? 4
-                : 5;
-      const tooltip = average == null
-        ? `${DATE_FORMAT.format(day)} · no tracked habits`
-        : `${DATE_FORMAT.format(day)} · ${formatPercent(average)}% avg · ${values.length}/${state.habits.length} tracked`;
+      return `
+        <div class="habit-matrix-row">
+          <div class="habit-matrix-label" title="${escapeHtml(habit.name)}">
+            <i style="--matrix-habit-color:${habit.color}"></i>
+            <span>${escapeHtml(habit.name)}</span>
+          </div>
+          <div class="habit-matrix-cells">${cells.join("")}</div>
+        </div>`;
+    });
 
-      cells.push(`<span class="heatmap-cell heatmap-level-${level}" title="${escapeHtml(tooltip)}" aria-label="${escapeHtml(tooltip)}"></span>`);
-    }
-
-    return cells.join("");
+    return rows.join("");
   }
 
   function renderTrendChart(habit, date) {

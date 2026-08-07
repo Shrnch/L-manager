@@ -505,56 +505,75 @@ button { color: inherit; }
 }
 
 
-/* v0.2.1 — compact all-habits contribution heatmap */
+/* v0.2.2 — per-habit contribution matrix */
 .all-habits-heatmap-block {
   margin: 12px 14px 0;
   padding-bottom: 2px;
 }
-.heatmap-scroll {
+.habit-matrix-scroll {
   max-width: 100%;
   overflow-x: auto;
-  padding-bottom: 2px;
+  padding: 2px 0 4px;
   scrollbar-width: thin;
   scrollbar-color: rgba(255,255,255,.12) transparent;
 }
-.contribution-heatmap {
+.habit-matrix {
   display: grid;
-  grid-template-rows: repeat(7, 10px);
-  grid-auto-flow: column;
-  grid-auto-columns: 10px;
-  gap: 3px;
-  width: max-content;
+  gap: 5px;
+  min-width: max-content;
 }
-.heatmap-cell {
-  display: block;
-  width: 10px;
-  height: 10px;
-  border-radius: 2px;
-  border: 1px solid rgba(255,255,255,.035);
-  transition: 120ms ease;
+.habit-matrix-row {
+  display: grid;
+  grid-template-columns: 78px auto;
+  gap: 7px;
+  align-items: center;
 }
-.contribution-heatmap .heatmap-cell:hover {
-  transform: scale(1.28);
-  border-color: rgba(255,255,255,.36);
-  z-index: 2;
-}
-.heatmap-level-0 { background: rgba(255,255,255,.035); }
-.heatmap-level-1 { background: rgba(124,92,252,.16); }
-.heatmap-level-2 { background: rgba(124,92,252,.30); }
-.heatmap-level-3 { background: rgba(124,92,252,.47); }
-.heatmap-level-4 { background: rgba(124,92,252,.67); }
-.heatmap-level-5 { background: rgba(124,92,252,.92); }
-.heatmap-legend {
+.habit-matrix-label {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 4px;
-  margin-top: 7px;
-  color: var(--muted-2);
+  gap: 6px;
+  min-width: 0;
+  color: #aeb3be;
   font-size: 8px;
+  line-height: 1;
 }
-.heatmap-legend .heatmap-cell {
+.habit-matrix-label i {
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--matrix-habit-color);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--matrix-habit-color) 12%, transparent);
+}
+.habit-matrix-label span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.habit-matrix-cells {
+  display: grid;
+  grid-template-columns: repeat(42, 8px);
+  gap: 2px;
+}
+.habit-matrix-cell {
+  display: block;
   width: 8px;
   height: 8px;
   border-radius: 2px;
+  border: 1px solid rgba(255,255,255,.035);
+  transition: transform 110ms ease, border-color 110ms ease, filter 110ms ease;
 }
+.habit-matrix-cell.is-empty {
+  background: rgba(255,255,255,.035);
+}
+.habit-matrix-cell.has-value {
+  background: var(--matrix-cell-bg);
+}
+.habit-matrix-cell:hover {
+  transform: scale(1.35);
+  border-color: rgba(255,255,255,.48);
+  filter: brightness(1.12);
+  z-index: 3;
+}
+

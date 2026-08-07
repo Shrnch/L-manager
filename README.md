@@ -53,3 +53,10 @@ Use **Export** regularly if you want a portable backup.
 - Added a compact GitHub-style heatmap in the right sidebar.
 - Each square represents one day across all habits; shade intensity reflects the average completion of tracked habits on that day.
 - Hover a square to see the date, average percentage, and how many habits were tracked.
+
+
+### v0.2.2
+- Replaced the aggregated all-habits heatmap with a per-habit contribution matrix.
+- One row per habit and one square per day (42 recent days).
+- Each habit keeps its own color; shade reflects that habit's result only.
+- Negative habits use the same normalized 100%/0% success logic as the rest of the app.
