@@ -2,7 +2,7 @@
   "use strict";
 
   const STORAGE_KEY = "l-manager:data:v1";
-  const APP_VERSION = "0.2.2";
+  const APP_VERSION = "0.2.4";
   const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const MONTH_FORMAT = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" });
   const DATE_FORMAT = new Intl.DateTimeFormat("ru", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
@@ -338,8 +338,11 @@
     today.setHours(12, 0, 0, 0);
 
     const trackedDateKeys = Object.keys(state.entries)
-      .map((key) => key.slice(key.lastIndexOf("|") + 1))
-      .filter((key) => /^\d{4}-\d{2}-\d{2}$/.test(key))
+      .map((key) => {
+        const match = key.match(/(\d{4}-\d{2}-\d{2})$/);
+        return match ? match[1] : null;
+      })
+      .filter(Boolean)
       .sort();
 
     let start;
@@ -357,6 +360,25 @@
     } else {
       start = new Date(today);
     }
+
+    const visibleDays = Array.from({ length: daysToShow }, (_, index) => {
+      const day = new Date(start);
+      day.setDate(start.getDate() + index);
+      return day;
+    });
+
+    const dateLabels = visibleDays.map((day, index) => {
+      const showMonth = index === 0 || day.getDate() === 1;
+      const label = showMonth
+        ? `${day.toLocaleDateString("en", { month: "short" })} ${day.getDate()}`
+        : String(day.getDate());
+      const tooltip = DATE_FORMAT.format(day);
+      return `<span class="habit-matrix-date${day > today ? " is-future" : ""}" title="${escapeHtml(tooltip)}">${escapeHtml(label)}</span>`;
+    }).join("");
+
+    const firstVisible = visibleDays[0];
+    const lastVisible = visibleDays[visibleDays.length - 1];
+    const rangeLabel = `${firstVisible.toLocaleDateString("en", { month: "short", day: "numeric" })} – ${lastVisible.toLocaleDateString("en", { month: "short", day: "numeric" })}`;
 
     const rows = state.habits.map((habit) => {
       const cells = [];
@@ -398,7 +420,13 @@
         </div>`;
     });
 
-    return rows.join("");
+    return `
+      <div class="habit-matrix-range">${escapeHtml(rangeLabel)}</div>
+      <div class="habit-matrix-date-row" aria-hidden="true">
+        <div></div>
+        <div class="habit-matrix-dates">${dateLabels}</div>
+      </div>
+      ${rows.join("")}`;
   }
 
   function renderTrendChart(habit, date) {

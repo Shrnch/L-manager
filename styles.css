@@ -505,7 +505,42 @@ button { color: inherit; }
 }
 
 
-/* v0.2.3 — compact per-habit history matrix */
+/* v0.2.4 — fixed history dates + compact date labels */
+.habit-matrix-range {
+  margin: 1px 0 5px 79px;
+  color: #737985;
+  font-size: 8px;
+  line-height: 1;
+  letter-spacing: .01em;
+}
+.habit-matrix-date-row {
+  display: grid;
+  grid-template-columns: minmax(58px, 72px) minmax(0, 1fr);
+  gap: 7px;
+  align-items: end;
+  min-width: 0;
+  margin-bottom: 1px;
+}
+.habit-matrix-dates {
+  display: grid;
+  grid-template-columns: repeat(28, minmax(0, 1fr));
+  gap: 2px;
+  width: 100%;
+  min-width: 0;
+}
+.habit-matrix-date {
+  min-width: 0;
+  color: #777d88;
+  font-size: 6px;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  overflow: visible;
+}
+.habit-matrix-date.is-future {
+  color: #4f545d;
+}
+
 .all-habits-heatmap-block {
   margin: 12px 14px 0;
   padding-bottom: 2px;

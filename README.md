@@ -55,15 +55,13 @@ Use **Export** regularly if you want a portable backup.
 - Hover a square to see the date, average percentage, and how many habits were tracked.
 
 
-### v0.2.3
+### v0.2.4
 - Replaced the aggregated all-habits heatmap with a per-habit contribution matrix.
 - One row per habit and one square per day (42 recent days).
 - Each habit keeps its own color; shade reflects that habit's result only.
 - Negative habits use the same normalized 100%/0% success logic as the rest of the app.
 
 
-## v0.2.3
-- Habit history matrix no longer scrolls horizontally.
-- Matrix is 28 compact responsive day cells wide.
-- For fresh data, history starts on the first tracked day so empty/future cells appear to the right.
-- Once history exceeds 28 days, it becomes a rolling 28-day window ending today.
+## v0.2.4
+- Fixed habit-history lookup for stored entry keys (`habitId::YYYY-MM-DD`).
+- Added visible date labels and range above the per-habit history matrix.
