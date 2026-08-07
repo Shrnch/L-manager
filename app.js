@@ -2,7 +2,7 @@
   "use strict";
 
   const STORAGE_KEY = "l-manager:data:v1";
-  const APP_VERSION = "0.1.5";
+  const APP_VERSION = "0.2.0";
   const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const MONTH_FORMAT = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" });
   const DATE_FORMAT = new Intl.DateTimeFormat("ru", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
@@ -10,6 +10,7 @@
   const state = loadState();
   let viewDate = startOfMonth(new Date());
   let toastTimer = null;
+  let selectedHabitId = null;
 
   const els = {
     habitList: document.querySelector("#habitList"),
@@ -23,6 +24,12 @@
     emptyAddHabitBtn: document.querySelector("#emptyAddHabitBtn"),
     exportBtn: document.querySelector("#exportBtn"),
     importInput: document.querySelector("#importInput"),
+    insightsPanel: document.querySelector("#insightsPanel"),
+    visualHabitSelect: document.querySelector("#visualHabitSelect"),
+    insightKpis: document.querySelector("#insightKpis"),
+    habitTrendChart: document.querySelector("#habitTrendChart"),
+    trendCaption: document.querySelector("#trendCaption"),
+    habitComparison: document.querySelector("#habitComparison"),
 
     habitModal: document.querySelector("#habitModal"),
     habitForm: document.querySelector("#habitForm"),
@@ -143,14 +150,21 @@
 
     els.exportBtn.addEventListener("click", exportData);
     els.importInput.addEventListener("change", importData);
+    els.visualHabitSelect.addEventListener("change", () => {
+      selectedHabitId = els.visualHabitSelect.value;
+      renderInsights();
+      syncSelectedHabitCard();
+    });
   }
 
   function render() {
     els.monthLabel.textContent = MONTH_FORMAT.format(viewDate);
     els.emptyState.hidden = state.habits.length !== 0;
     els.habitList.hidden = state.habits.length === 0;
+    els.insightsPanel.hidden = state.habits.length === 0;
 
     if (state.habits.length === 0) {
+      selectedHabitId = null;
       els.habitList.innerHTML = "";
       els.monthSummary.innerHTML = `
         <div class="summary-item"><span>habits</span><strong>0</strong></div>
@@ -159,8 +173,10 @@
       return;
     }
 
+    ensureSelectedHabit();
     els.habitList.innerHTML = state.habits.map(renderHabitCard).join("");
     renderMonthSummary();
+    renderInsights();
 
     els.habitList.querySelectorAll("[data-edit-habit]").forEach((button) => {
       button.addEventListener("click", () => openHabitModal(button.dataset.editHabit));
@@ -169,6 +185,15 @@
     els.habitList.querySelectorAll("[data-day]").forEach((cell) => {
       cell.addEventListener("click", () => openEntryModal(cell.dataset.habitId, cell.dataset.day));
     });
+
+    els.habitList.querySelectorAll("[data-view-habit]").forEach((button) => {
+      button.addEventListener("click", () => {
+        selectedHabitId = button.dataset.viewHabit;
+        renderInsights();
+        syncSelectedHabitCard();
+      });
+    });
+    syncSelectedHabitCard();
   }
 
   function renderHabitCard(habit) {
@@ -191,13 +216,13 @@
     const cells = calendar.map((date) => renderDayCell(habit, date)).join("");
 
     return `
-      <article class="habit-card" style="--habit-color: ${habit.color}">
+      <article class="habit-card" data-habit-card-id="${habit.id}" style="--habit-color: ${habit.color}">
         <header class="habit-header">
           <div class="habit-heading">
-            <div class="habit-title-row">
+            <button class="habit-title-row habit-view-button" type="button" data-view-habit="${habit.id}" title="Show visualization">
               <span class="habit-color-dot"></span>
               <h2 class="habit-title">${escapeHtml(habit.name)}</h2>
-            </div>
+            </button>
             <p class="habit-meta">${meta}</p>
           </div>
           <div class="habit-actions">
@@ -254,6 +279,162 @@
     }
 
     return `<button class="${classes.join(" ")}" style="${style}" type="button" data-habit-id="${habit.id}" data-day="${dateKey}" title="${escapeHtml(title)}">${content}</button>`;
+  }
+
+  function ensureSelectedHabit() {
+    if (!state.habits.length) {
+      selectedHabitId = null;
+      return;
+    }
+    if (!state.habits.some((habit) => habit.id === selectedHabitId)) {
+      selectedHabitId = state.habits[0].id;
+    }
+  }
+
+  function syncSelectedHabitCard() {
+    els.habitList.querySelectorAll("[data-habit-card-id]").forEach((card) => {
+      card.classList.toggle("is-visualized", card.dataset.habitCardId === selectedHabitId);
+    });
+  }
+
+  function renderInsights() {
+    if (!state.habits.length) return;
+    ensureSelectedHabit();
+    const habit = state.habits.find((item) => item.id === selectedHabitId) || state.habits[0];
+    if (!habit) return;
+
+    els.visualHabitSelect.innerHTML = state.habits.map((item) => `
+      <option value="${item.id}" ${item.id === habit.id ? "selected" : ""}>${escapeHtml(item.name)}</option>`).join("");
+
+    const monthEntries = getHabitMonthEntries(habit.id, viewDate);
+    const stats = computeHabitStats(habit, monthEntries);
+    const bestStreak = computeBestStreak(habit, viewDate);
+    const successLabel = habit.trackingType === "boolean" ? "success" : "100%+";
+    els.insightKpis.innerHTML = `
+      <div class="insight-kpi"><span>avg</span><strong>${stats.average == null ? "—" : `${formatPercent(stats.average)}%`}</strong></div>
+      <div class="insight-kpi"><span>${successLabel}</span><strong>${stats.hitTarget}</strong></div>
+      <div class="insight-kpi"><span>best streak</span><strong>${bestStreak}${bestStreak === 1 ? " day" : " days"}</strong></div>`;
+
+    els.trendCaption.textContent = `${MONTH_FORMAT.format(viewDate)} · target line at 100%`;
+    els.habitTrendChart.innerHTML = renderTrendChart(habit, viewDate);
+    els.habitComparison.innerHTML = renderHabitComparison(viewDate);
+    els.habitComparison.querySelectorAll("[data-comparison-habit]").forEach((button) => {
+      button.addEventListener("click", () => {
+        selectedHabitId = button.dataset.comparisonHabit;
+        renderInsights();
+        syncSelectedHabitCard();
+      });
+    });
+  }
+
+  function renderTrendChart(habit, date) {
+    const width = 336;
+    const height = 196;
+    const pad = { left: 34, right: 10, top: 14, bottom: 25 };
+    const days = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+    const values = [];
+    for (let day = 1; day <= days; day += 1) {
+      const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      const entry = state.entries[entryKey(habit.id, dateKey)];
+      values.push(entry ? getEntryPercent(habit, entry) : null);
+    }
+
+    const trackedValues = values.filter((value) => value != null && Number.isFinite(value));
+    const highest = trackedValues.length ? Math.max(...trackedValues, 100) : 100;
+    const yMax = Math.max(100, Math.ceil(highest / 50) * 50);
+    const innerW = width - pad.left - pad.right;
+    const innerH = height - pad.top - pad.bottom;
+    const xFor = (index) => pad.left + (days === 1 ? 0 : (index / (days - 1)) * innerW);
+    const yFor = (value) => pad.top + innerH - (Math.max(0, Math.min(value, yMax)) / yMax) * innerH;
+
+    const tickValues = [...new Set([0, yMax / 2, 100, yMax])].sort((a, b) => a - b);
+    const grids = tickValues.map((tick) => {
+      const y = yFor(tick);
+      const isTarget = Math.abs(tick - 100) < 0.001;
+      return `
+        <line x1="${pad.left}" y1="${y.toFixed(2)}" x2="${width - pad.right}" y2="${y.toFixed(2)}" class="chart-grid${isTarget ? " chart-target-line" : ""}" />
+        <text x="${pad.left - 7}" y="${(y + 3).toFixed(2)}" text-anchor="end" class="chart-axis-label">${formatPercent(tick)}%</text>`;
+    }).join("");
+
+    const segments = [];
+    let current = [];
+    values.forEach((value, index) => {
+      if (value == null || !Number.isFinite(value)) {
+        if (current.length) segments.push(current);
+        current = [];
+      } else {
+        current.push(`${xFor(index).toFixed(2)},${yFor(value).toFixed(2)}`);
+      }
+    });
+    if (current.length) segments.push(current);
+
+    const lines = segments.map((segment) => segment.length > 1
+      ? `<polyline points="${segment.join(" ")}" fill="none" stroke="${habit.color}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />`
+      : "").join("");
+
+    const points = values.map((value, index) => {
+      if (value == null || !Number.isFinite(value)) return "";
+      const x = xFor(index);
+      const y = yFor(value);
+      return `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="3.25" fill="${habit.color}" stroke="#111319" stroke-width="1.6"><title>Day ${index + 1}: ${formatPercent(value)}%</title></circle>`;
+    }).join("");
+
+    const midDay = Math.ceil(days / 2);
+    const xLabels = [1, midDay, days].map((day) => {
+      const x = xFor(day - 1);
+      return `<text x="${x.toFixed(2)}" y="${height - 6}" text-anchor="middle" class="chart-axis-label">${day}</text>`;
+    }).join("");
+
+    const empty = trackedValues.length === 0
+      ? `<text x="${width / 2}" y="${height / 2}" text-anchor="middle" class="chart-empty-label">No tracked days yet</text>`
+      : "";
+
+    return `
+      <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Daily percentage trend for ${escapeHtml(habit.name)}">
+        ${grids}
+        ${lines}
+        ${points}
+        ${xLabels}
+        ${empty}
+      </svg>`;
+  }
+
+  function renderHabitComparison(date) {
+    const rows = state.habits.map((habit) => {
+      const stats = computeHabitStats(habit, getHabitMonthEntries(habit.id, date));
+      return { habit, average: stats.average, tracked: stats.tracked };
+    });
+    const finite = rows.map((row) => row.average).filter((value) => value != null && Number.isFinite(value));
+    const scaleMax = Math.max(100, finite.length ? Math.max(...finite) : 100);
+
+    return rows.map(({ habit, average, tracked }) => {
+      const width = average == null ? 0 : Math.max(0, Math.min(100, (average / scaleMax) * 100));
+      return `
+        <button class="comparison-row${habit.id === selectedHabitId ? " selected" : ""}" type="button" data-comparison-habit="${habit.id}">
+          <span class="comparison-name"><i style="--comparison-color:${habit.color}"></i>${escapeHtml(habit.name)}</span>
+          <span class="comparison-value">${average == null ? "—" : `${formatPercent(average)}%`}</span>
+          <span class="comparison-track"><span style="width:${width.toFixed(2)}%; background:${habit.color}"></span></span>
+          <span class="comparison-meta">${tracked} tracked</span>
+        </button>`;
+    }).join("");
+  }
+
+  function computeBestStreak(habit, date) {
+    const days = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+    let best = 0;
+    let current = 0;
+    for (let day = 1; day <= days; day += 1) {
+      const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      const entry = state.entries[entryKey(habit.id, dateKey)];
+      const success = entry && getEntryPercent(habit, entry) >= 100;
+      if (success) {
+        current += 1;
+        best = Math.max(best, current);
+      } else {
+        current = 0;
+      }
+    }
+    return best;
   }
 
   function renderMonthSummary() {

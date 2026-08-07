@@ -40,18 +40,58 @@
         <div class="month-summary" id="monthSummary"></div>
       </section>
 
-      <section id="habitList" class="habit-list" aria-live="polite"></section>
+      <section class="workspace-layout">
+        <div class="tracker-column">
+          <section id="habitList" class="habit-list" aria-live="polite"></section>
 
-      <section id="emptyState" class="empty-state panel" hidden>
-        <div class="empty-orbit">
-          <div class="empty-dot dot-a"></div>
-          <div class="empty-dot dot-b"></div>
-          <div class="empty-dot dot-c"></div>
-          <div class="empty-core">L</div>
+          <section id="emptyState" class="empty-state panel" hidden>
+            <div class="empty-orbit">
+              <div class="empty-dot dot-a"></div>
+              <div class="empty-dot dot-b"></div>
+              <div class="empty-dot dot-c"></div>
+              <div class="empty-core">L</div>
+            </div>
+            <h2>No habits yet</h2>
+            <p>Добавь первую привычку. Цель задаётся числом, а L manager сам считает процент — хоть 12%, хоть 124%, хоть 500%.</p>
+            <button class="button button-primary" id="emptyAddHabitBtn" type="button">Create first habit</button>
+          </section>
         </div>
-        <h2>No habits yet</h2>
-        <p>Добавь первую привычку. Цель задаётся числом, а L manager сам считает процент — хоть 12%, хоть 124%, хоть 500%.</p>
-        <button class="button button-primary" id="emptyAddHabitBtn" type="button">Create first habit</button>
+
+        <aside id="insightsPanel" class="insights-panel panel" hidden aria-label="Habit visualization">
+          <div class="insights-header">
+            <div>
+              <span class="eyebrow">Visualization</span>
+              <h2>Habit overview</h2>
+            </div>
+          </div>
+
+          <label class="insight-select-field">
+            <span>Habit</span>
+            <select id="visualHabitSelect"></select>
+          </label>
+
+          <div id="insightKpis" class="insight-kpis"></div>
+
+          <section class="insight-section">
+            <div class="insight-section-heading">
+              <div>
+                <h3>Daily progress</h3>
+                <p id="trendCaption">Current month · target line at 100%</p>
+              </div>
+            </div>
+            <div id="habitTrendChart" class="habit-trend-chart"></div>
+          </section>
+
+          <section class="insight-section">
+            <div class="insight-section-heading">
+              <div>
+                <h3>Habits this month</h3>
+                <p>Average result for tracked days</p>
+              </div>
+            </div>
+            <div id="habitComparison" class="habit-comparison"></div>
+          </section>
+        </aside>
       </section>
     </main>
   </div>
