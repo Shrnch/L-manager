@@ -1,0 +1,587 @@
+(() => {
+  "use strict";
+
+  const STORAGE_KEY = "l-manager:data:v1";
+  const APP_VERSION = "0.1.0";
+  const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const MONTH_FORMAT = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" });
+  const DATE_FORMAT = new Intl.DateTimeFormat("ru", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+
+  const state = loadState();
+  let viewDate = startOfMonth(new Date());
+  let toastTimer = null;
+
+  const els = {
+    habitList: document.querySelector("#habitList"),
+    emptyState: document.querySelector("#emptyState"),
+    monthLabel: document.querySelector("#monthLabel"),
+    monthSummary: document.querySelector("#monthSummary"),
+    prevMonthBtn: document.querySelector("#prevMonthBtn"),
+    nextMonthBtn: document.querySelector("#nextMonthBtn"),
+    monthButton: document.querySelector("#monthButton"),
+    addHabitBtn: document.querySelector("#addHabitBtn"),
+    emptyAddHabitBtn: document.querySelector("#emptyAddHabitBtn"),
+    exportBtn: document.querySelector("#exportBtn"),
+    importInput: document.querySelector("#importInput"),
+
+    habitModal: document.querySelector("#habitModal"),
+    habitForm: document.querySelector("#habitForm"),
+    habitModalTitle: document.querySelector("#habitModalTitle"),
+    habitId: document.querySelector("#habitId"),
+    habitName: document.querySelector("#habitName"),
+    habitTrackingType: document.querySelector("#habitTrackingType"),
+    habitTarget: document.querySelector("#habitTarget"),
+    habitUnit: document.querySelector("#habitUnit"),
+    habitColor: document.querySelector("#habitColor"),
+    habitColorText: document.querySelector("#habitColorText"),
+    targetValueField: document.querySelector("#targetValueField"),
+    unitField: document.querySelector("#unitField"),
+    trackingHint: document.querySelector("#trackingHint"),
+    deleteHabitBtn: document.querySelector("#deleteHabitBtn"),
+
+    entryModal: document.querySelector("#entryModal"),
+    entryForm: document.querySelector("#entryForm"),
+    entryHabitId: document.querySelector("#entryHabitId"),
+    entryDate: document.querySelector("#entryDate"),
+    entryDateLabel: document.querySelector("#entryDateLabel"),
+    entryModalTitle: document.querySelector("#entryModalTitle"),
+    entryValueLabel: document.querySelector("#entryValueLabel"),
+    entryValue: document.querySelector("#entryValue"),
+    entryUnitBadge: document.querySelector("#entryUnitBadge"),
+    entryPercentPreview: document.querySelector("#entryPercentPreview"),
+    entryNote: document.querySelector("#entryNote"),
+    clearEntryBtn: document.querySelector("#clearEntryBtn"),
+    toast: document.querySelector("#toast"),
+  };
+
+  bindEvents();
+  render();
+
+  function defaultState() {
+    return {
+      version: APP_VERSION,
+      habits: [],
+      entries: {},
+    };
+  }
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return defaultState();
+      const parsed = JSON.parse(raw);
+      if (!parsed || !Array.isArray(parsed.habits) || typeof parsed.entries !== "object") return defaultState();
+      return {
+        version: APP_VERSION,
+        habits: parsed.habits,
+        entries: parsed.entries || {},
+      };
+    } catch (error) {
+      console.warn("L manager: failed to load local data", error);
+      return defaultState();
+    }
+  }
+
+  function saveState() {
+    state.version = APP_VERSION;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function bindEvents() {
+    els.prevMonthBtn.addEventListener("click", () => changeMonth(-1));
+    els.nextMonthBtn.addEventListener("click", () => changeMonth(1));
+    els.monthButton.addEventListener("click", () => {
+      viewDate = startOfMonth(new Date());
+      render();
+    });
+
+    els.addHabitBtn.addEventListener("click", () => openHabitModal());
+    els.emptyAddHabitBtn.addEventListener("click", () => openHabitModal());
+
+    document.querySelectorAll("[data-close-modal]").forEach((button) => {
+      button.addEventListener("click", () => closeModal(document.querySelector(`#${button.dataset.closeModal}`)));
+    });
+
+    [els.habitModal, els.entryModal].forEach((modal) => {
+      modal.addEventListener("mousedown", (event) => {
+        if (event.target === modal) closeModal(modal);
+      });
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        closeModal(els.habitModal);
+        closeModal(els.entryModal);
+      }
+    });
+
+    els.habitTrackingType.addEventListener("change", syncTrackingFields);
+    els.habitColor.addEventListener("input", () => {
+      els.habitColorText.value = els.habitColor.value.toUpperCase();
+    });
+    els.habitColorText.addEventListener("input", () => {
+      const color = normalizeHex(els.habitColorText.value);
+      if (color) els.habitColor.value = color;
+    });
+
+    els.habitForm.addEventListener("submit", saveHabitFromForm);
+    els.deleteHabitBtn.addEventListener("click", deleteCurrentHabit);
+
+    els.entryValue.addEventListener("input", updateEntryPreview);
+    els.entryForm.addEventListener("submit", saveEntryFromForm);
+    els.clearEntryBtn.addEventListener("click", clearCurrentEntry);
+
+    els.exportBtn.addEventListener("click", exportData);
+    els.importInput.addEventListener("change", importData);
+  }
+
+  function render() {
+    els.monthLabel.textContent = MONTH_FORMAT.format(viewDate);
+    els.emptyState.hidden = state.habits.length !== 0;
+    els.habitList.hidden = state.habits.length === 0;
+
+    if (state.habits.length === 0) {
+      els.habitList.innerHTML = "";
+      els.monthSummary.innerHTML = `
+        <div class="summary-item"><span>habits</span><strong>0</strong></div>
+        <div class="summary-item"><span>tracked</span><strong>0</strong></div>
+        <div class="summary-item"><span>avg</span><strong>—</strong></div>`;
+      return;
+    }
+
+    els.habitList.innerHTML = state.habits.map(renderHabitCard).join("");
+    renderMonthSummary();
+
+    els.habitList.querySelectorAll("[data-edit-habit]").forEach((button) => {
+      button.addEventListener("click", () => openHabitModal(button.dataset.editHabit));
+    });
+
+    els.habitList.querySelectorAll("[data-day]").forEach((cell) => {
+      cell.addEventListener("click", () => openEntryModal(cell.dataset.habitId, cell.dataset.day));
+    });
+  }
+
+  function renderHabitCard(habit) {
+    const calendar = getCalendarDays(viewDate);
+    const monthEntries = getHabitMonthEntries(habit.id, viewDate);
+    const stats = computeHabitStats(habit, monthEntries);
+    const meta = habit.trackingType === "percent"
+      ? "Manual percentage · no upper limit"
+      : `Target: ${formatNumber(habit.target)}${habit.unit ? ` ${escapeHtml(habit.unit)}` : ""} / day`;
+
+    const weekdays = WEEKDAYS.map((day) => `<div class="weekday">${day}</div>`).join("");
+    const cells = calendar.map((date) => renderDayCell(habit, date)).join("");
+
+    return `
+      <article class="habit-card" style="--habit-color: ${habit.color}">
+        <header class="habit-header">
+          <div class="habit-heading">
+            <div class="habit-title-row">
+              <span class="habit-color-dot"></span>
+              <h2 class="habit-title">${escapeHtml(habit.name)}</h2>
+            </div>
+            <p class="habit-meta">${meta}</p>
+          </div>
+          <div class="habit-actions">
+            <div class="habit-kpis">
+              <div class="habit-kpi"><span>avg</span><strong>${stats.average == null ? "—" : `${formatPercent(stats.average)}%`}</strong></div>
+              <div class="habit-kpi"><span>100%+</span><strong>${stats.hitTarget}</strong></div>
+              <div class="habit-kpi"><span>tracked</span><strong>${stats.tracked}</strong></div>
+            </div>
+            <button class="icon-button edit-habit" type="button" data-edit-habit="${habit.id}" aria-label="Edit ${escapeHtml(habit.name)}">•••</button>
+          </div>
+        </header>
+        <div class="calendar-wrap">
+          <div class="calendar">
+            ${weekdays}
+            ${cells}
+          </div>
+        </div>
+      </article>`;
+  }
+
+  function renderDayCell(habit, date) {
+    const inMonth = date.getMonth() === viewDate.getMonth();
+    if (!inMonth) return `<button class="day-cell day-outside" tabindex="-1" aria-hidden="true"></button>`;
+
+    const dateKey = toDateKey(date);
+    const entry = state.entries[entryKey(habit.id, dateKey)];
+    const today = isSameDate(date, new Date());
+    const classes = ["day-cell"];
+    if (entry) classes.push("has-entry");
+    if (today) classes.push("day-today");
+
+    let style = "";
+    let content = `<div class="day-top"><span class="day-number">${date.getDate()}</span></div>`;
+    let title = `${habit.name} · ${DATE_FORMAT.format(date)}`;
+
+    if (entry) {
+      const percent = getEntryPercent(habit, entry);
+      const bg = colorForPercent(habit.color, percent);
+      style = `--entry-bg:${bg};`;
+      const valueText = habit.trackingType === "percent"
+        ? "manual"
+        : `${formatNumber(entry.value)}${habit.unit ? ` ${escapeHtml(habit.unit)}` : ""}`;
+      const noteDot = entry.note ? `<span class="day-note-dot" title="Has note"></span>` : "";
+      content = `
+        <div class="day-top"><span class="day-number">${date.getDate()}</span>${noteDot}</div>
+        <span class="day-value">${valueText}</span>
+        <strong class="day-percent">${formatPercent(percent)}%</strong>`;
+      title += ` · ${formatPercent(percent)}%`;
+      if (entry.note) title += ` · ${entry.note}`;
+    }
+
+    return `<button class="${classes.join(" ")}" style="${style}" type="button" data-habit-id="${habit.id}" data-day="${dateKey}" title="${escapeHtml(title)}">${content}</button>`;
+  }
+
+  function renderMonthSummary() {
+    const entries = [];
+    for (const habit of state.habits) {
+      for (const item of getHabitMonthEntries(habit.id, viewDate)) {
+        entries.push({ habit, entry: item.entry });
+      }
+    }
+
+    const percentages = entries.map(({ habit, entry }) => getEntryPercent(habit, entry));
+    const avg = percentages.length ? percentages.reduce((a, b) => a + b, 0) / percentages.length : null;
+    const targetHits = percentages.filter((value) => value >= 100).length;
+
+    els.monthSummary.innerHTML = `
+      <div class="summary-item"><span>habits</span><strong>${state.habits.length}</strong></div>
+      <div class="summary-item"><span>tracked</span><strong>${entries.length}</strong></div>
+      <div class="summary-item"><span>100%+</span><strong>${targetHits}</strong></div>
+      <div class="summary-item"><span>avg</span><strong>${avg == null ? "—" : `${formatPercent(avg)}%`}</strong></div>`;
+  }
+
+  function changeMonth(offset) {
+    viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + offset, 1);
+    render();
+  }
+
+  function openHabitModal(habitId = null) {
+    const habit = state.habits.find((item) => item.id === habitId);
+    els.habitForm.reset();
+    els.habitId.value = habit?.id || "";
+    els.habitModalTitle.textContent = habit ? "Edit habit" : "New habit";
+    els.deleteHabitBtn.hidden = !habit;
+
+    els.habitName.value = habit?.name || "";
+    els.habitTrackingType.value = habit?.trackingType || "target";
+    els.habitTarget.value = habit?.target ?? 1;
+    els.habitUnit.value = habit?.unit || "";
+    els.habitColor.value = habit?.color || "#7C5CFC";
+    els.habitColorText.value = (habit?.color || "#7C5CFC").toUpperCase();
+    syncTrackingFields();
+    openModal(els.habitModal);
+    setTimeout(() => els.habitName.focus(), 30);
+  }
+
+  function syncTrackingFields() {
+    const manual = els.habitTrackingType.value === "percent";
+    els.targetValueField.hidden = manual;
+    els.unitField.hidden = manual;
+    els.habitTarget.required = !manual;
+    els.trackingHint.textContent = manual
+      ? "Вводишь процент напрямую. Можно записать 0%, 124%, 500% или любое другое неотрицательное значение."
+      : "Вводишь фактическое значение — процент считается автоматически. Верхнего лимита нет.";
+  }
+
+  function saveHabitFromForm(event) {
+    event.preventDefault();
+    const id = els.habitId.value || createId("habit");
+    const trackingType = els.habitTrackingType.value;
+    const target = Number(els.habitTarget.value);
+    const color = normalizeHex(els.habitColorText.value) || els.habitColor.value;
+
+    if (!els.habitName.value.trim()) return;
+    if (trackingType === "target" && (!Number.isFinite(target) || target <= 0)) {
+      showToast("Target must be greater than zero");
+      return;
+    }
+
+    const habit = {
+      id,
+      name: els.habitName.value.trim(),
+      trackingType,
+      target: trackingType === "target" ? target : 100,
+      unit: trackingType === "target" ? els.habitUnit.value.trim() : "%",
+      color,
+      createdAt: state.habits.find((item) => item.id === id)?.createdAt || new Date().toISOString(),
+    };
+
+    const index = state.habits.findIndex((item) => item.id === id);
+    if (index >= 0) state.habits[index] = habit;
+    else state.habits.push(habit);
+
+    saveState();
+    closeModal(els.habitModal);
+    render();
+    showToast(index >= 0 ? "Habit updated" : "Habit created");
+  }
+
+  function deleteCurrentHabit() {
+    const id = els.habitId.value;
+    const habit = state.habits.find((item) => item.id === id);
+    if (!habit) return;
+    if (!window.confirm(`Delete “${habit.name}” and all its tracked days?`)) return;
+
+    state.habits = state.habits.filter((item) => item.id !== id);
+    for (const key of Object.keys(state.entries)) {
+      if (key.startsWith(`${id}::`)) delete state.entries[key];
+    }
+    saveState();
+    closeModal(els.habitModal);
+    render();
+    showToast("Habit deleted");
+  }
+
+  function openEntryModal(habitId, dateKey) {
+    const habit = state.habits.find((item) => item.id === habitId);
+    if (!habit) return;
+
+    const entry = state.entries[entryKey(habitId, dateKey)];
+    const date = fromDateKey(dateKey);
+    els.entryHabitId.value = habitId;
+    els.entryDate.value = dateKey;
+    els.entryDateLabel.textContent = DATE_FORMAT.format(date);
+    els.entryModalTitle.textContent = habit.name;
+    els.entryValue.value = entry?.value ?? "";
+    els.entryNote.value = entry?.note || "";
+    els.clearEntryBtn.hidden = !entry;
+
+    if (habit.trackingType === "percent") {
+      els.entryValueLabel.textContent = "Percentage";
+      els.entryUnitBadge.textContent = "%";
+      els.entryValue.placeholder = "100";
+    } else {
+      els.entryValueLabel.textContent = "Actual result";
+      els.entryUnitBadge.textContent = habit.unit || "";
+      els.entryValue.placeholder = String(habit.target);
+    }
+
+    updateEntryPreview();
+    openModal(els.entryModal);
+    setTimeout(() => els.entryValue.focus(), 30);
+  }
+
+  function updateEntryPreview() {
+    const habit = state.habits.find((item) => item.id === els.entryHabitId.value);
+    const value = Number(els.entryValue.value);
+    if (!habit || els.entryValue.value === "" || !Number.isFinite(value) || value < 0) {
+      els.entryPercentPreview.textContent = "—";
+      return;
+    }
+    const percent = habit.trackingType === "percent" ? value : (value / habit.target) * 100;
+    els.entryPercentPreview.textContent = `${formatPercent(percent)}%`;
+  }
+
+  function saveEntryFromForm(event) {
+    event.preventDefault();
+    const habitId = els.entryHabitId.value;
+    const dateKey = els.entryDate.value;
+    const value = Number(els.entryValue.value);
+    if (!Number.isFinite(value) || value < 0) return;
+
+    state.entries[entryKey(habitId, dateKey)] = {
+      value,
+      note: els.entryNote.value.trim(),
+      updatedAt: new Date().toISOString(),
+    };
+    saveState();
+    closeModal(els.entryModal);
+    render();
+    showToast("Day saved");
+  }
+
+  function clearCurrentEntry() {
+    const key = entryKey(els.entryHabitId.value, els.entryDate.value);
+    if (!state.entries[key]) return;
+    delete state.entries[key];
+    saveState();
+    closeModal(els.entryModal);
+    render();
+    showToast("Day cleared");
+  }
+
+  function getEntryPercent(habit, entry) {
+    if (!entry) return null;
+    if (habit.trackingType === "percent") return Number(entry.value) || 0;
+    return habit.target > 0 ? ((Number(entry.value) || 0) / habit.target) * 100 : 0;
+  }
+
+  function computeHabitStats(habit, monthEntries) {
+    if (!monthEntries.length) return { average: null, tracked: 0, hitTarget: 0 };
+    const values = monthEntries.map(({ entry }) => getEntryPercent(habit, entry));
+    return {
+      average: values.reduce((a, b) => a + b, 0) / values.length,
+      tracked: values.length,
+      hitTarget: values.filter((value) => value >= 100).length,
+    };
+  }
+
+  function getHabitMonthEntries(habitId, date) {
+    const prefix = `${habitId}::${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-`;
+    return Object.entries(state.entries)
+      .filter(([key]) => key.startsWith(prefix))
+      .map(([key, entry]) => ({ dateKey: key.split("::")[1], entry }));
+  }
+
+  function colorForPercent(hex, percent) {
+    const rgb = hexToRgb(hex) || { r: 124, g: 92, b: 252 };
+    const clamped = Math.max(0, Math.min(100, percent));
+    const progress = clamped / 100;
+
+    // 0% is intentionally distinct from no data: a faint but visible tint.
+    const alpha = 0.12 + progress * 0.58;
+    const darken = 0.72 + progress * 0.28;
+    const r = Math.round(rgb.r * darken);
+    const g = Math.round(rgb.g * darken);
+    const b = Math.round(rgb.b * darken);
+
+    return `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(3)})`;
+  }
+
+  function exportData() {
+    const payload = {
+      app: "L manager",
+      version: APP_VERSION,
+      exportedAt: new Date().toISOString(),
+      data: state,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `l-manager-backup-${toDateKey(new Date())}.json`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+    showToast("Backup exported");
+  }
+
+  async function importData(event) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      const incoming = parsed.data || parsed;
+      if (!incoming || !Array.isArray(incoming.habits) || typeof incoming.entries !== "object") throw new Error("Invalid backup");
+      if (!window.confirm("Import will replace current L manager data. Continue?")) return;
+
+      state.habits = incoming.habits;
+      state.entries = incoming.entries || {};
+      state.version = APP_VERSION;
+      saveState();
+      render();
+      showToast("Backup imported");
+    } catch (error) {
+      console.error(error);
+      showToast("Could not import this file");
+    }
+  }
+
+  function getCalendarDays(date) {
+    const first = startOfMonth(date);
+    const jsDay = first.getDay(); // Sun = 0
+    const mondayIndex = (jsDay + 6) % 7;
+    const start = new Date(first);
+    start.setDate(first.getDate() - mondayIndex);
+
+    const last = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+    const lastMondayIndex = (last.getDay() + 6) % 7;
+    const trailing = 6 - lastMondayIndex;
+    const cells = mondayIndex + last.getDate() + trailing;
+
+    return Array.from({ length: cells }, (_, index) => {
+      const day = new Date(start);
+      day.setDate(start.getDate() + index);
+      return day;
+    });
+  }
+
+  function openModal(modal) {
+    modal.hidden = false;
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeModal(modal) {
+    if (!modal || modal.hidden) return;
+    modal.hidden = true;
+    if (els.habitModal.hidden && els.entryModal.hidden) document.body.style.overflow = "";
+  }
+
+  function showToast(message) {
+    clearTimeout(toastTimer);
+    els.toast.textContent = message;
+    els.toast.classList.add("show");
+    toastTimer = setTimeout(() => els.toast.classList.remove("show"), 1800);
+  }
+
+  function startOfMonth(date) {
+    return new Date(date.getFullYear(), date.getMonth(), 1);
+  }
+
+  function isSameDate(a, b) {
+    return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  }
+
+  function toDateKey(date) {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  }
+
+  function fromDateKey(key) {
+    const [year, month, day] = key.split("-").map(Number);
+    return new Date(year, month - 1, day);
+  }
+
+  function entryKey(habitId, dateKey) {
+    return `${habitId}::${dateKey}`;
+  }
+
+  function formatNumber(value) {
+    return new Intl.NumberFormat("en", { maximumFractionDigits: 2 }).format(value);
+  }
+
+  function formatPercent(value) {
+    if (!Number.isFinite(value)) return "0";
+    const isInteger = Math.abs(value - Math.round(value)) < 0.000001;
+    return new Intl.NumberFormat("en", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: isInteger ? 0 : 1,
+    }).format(value);
+  }
+
+  function createId(prefix) {
+    if (window.crypto?.randomUUID) return `${prefix}-${crypto.randomUUID()}`;
+    return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
+  }
+
+  function normalizeHex(value) {
+    const text = String(value || "").trim();
+    if (/^#[0-9a-fA-F]{6}$/.test(text)) return text.toUpperCase();
+    return null;
+  }
+
+  function hexToRgb(hex) {
+    const valid = normalizeHex(hex);
+    if (!valid) return null;
+    return {
+      r: parseInt(valid.slice(1, 3), 16),
+      g: parseInt(valid.slice(3, 5), 16),
+      b: parseInt(valid.slice(5, 7), 16),
+    };
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+})();

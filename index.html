@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <title>L manager</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-block">
+        <div class="brand-mark">L</div>
+        <div>
+          <h1>L manager</h1>
+          <p>habit tracker</p>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <button class="button button-ghost" id="exportBtn" type="button">Export</button>
+        <label class="button button-ghost file-button" for="importInput">Import</label>
+        <input id="importInput" type="file" accept="application/json,.json" hidden />
+        <button class="button button-primary" id="addHabitBtn" type="button">+ Habit</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="month-toolbar panel">
+        <div class="month-nav">
+          <button class="icon-button" id="prevMonthBtn" aria-label="Previous month">←</button>
+          <button class="month-button" id="monthButton" type="button">
+            <span id="monthLabel"></span>
+            <span class="month-button-caption">today</span>
+          </button>
+          <button class="icon-button" id="nextMonthBtn" aria-label="Next month">→</button>
+        </div>
+
+        <div class="month-summary" id="monthSummary"></div>
+      </section>
+
+      <section id="habitList" class="habit-list" aria-live="polite"></section>
+
+      <section id="emptyState" class="empty-state panel" hidden>
+        <div class="empty-orbit">
+          <div class="empty-dot dot-a"></div>
+          <div class="empty-dot dot-b"></div>
+          <div class="empty-dot dot-c"></div>
+          <div class="empty-core">L</div>
+        </div>
+        <h2>No habits yet</h2>
+        <p>Добавь первую привычку. Цель задаётся числом, а L manager сам считает процент — хоть 12%, хоть 124%, хоть 500%.</p>
+        <button class="button button-primary" id="emptyAddHabitBtn" type="button">Create first habit</button>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="habitModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="habitModalTitle">
+      <div class="modal-header">
+        <div>
+          <span class="eyebrow">Habit</span>
+          <h2 id="habitModalTitle">New habit</h2>
+        </div>
+        <button class="icon-button modal-close" data-close-modal="habitModal" aria-label="Close">×</button>
+      </div>
+
+      <form id="habitForm" class="form-grid">
+        <input id="habitId" type="hidden" />
+
+        <label class="field field-span-2">
+          <span>Name</span>
+          <input id="habitName" type="text" maxlength="80" placeholder="Например: Читать" autocomplete="off" required />
+        </label>
+
+        <label class="field">
+          <span>Tracking</span>
+          <select id="habitTrackingType">
+            <option value="target">Target value</option>
+            <option value="percent">Manual percent</option>
+          </select>
+        </label>
+
+        <label class="field" id="targetValueField">
+          <span>Daily target</span>
+          <input id="habitTarget" type="number" min="0.0001" step="any" value="1" required />
+        </label>
+
+        <label class="field" id="unitField">
+          <span>Unit</span>
+          <input id="habitUnit" type="text" maxlength="24" placeholder="min, pages, km…" autocomplete="off" />
+        </label>
+
+        <div class="field color-field">
+          <span>Color</span>
+          <div class="color-picker-row">
+            <input id="habitColor" type="color" value="#7C5CFC" />
+            <input id="habitColorText" type="text" value="#7C5CFC" maxlength="7" spellcheck="false" />
+          </div>
+        </div>
+
+        <div class="form-hint field-span-2" id="trackingHint">
+          Вводишь фактическое значение — процент считается автоматически. Верхнего лимита нет.
+        </div>
+
+        <div class="modal-actions field-span-2">
+          <button class="button button-danger button-left" id="deleteHabitBtn" type="button" hidden>Delete</button>
+          <button class="button button-ghost" type="button" data-close-modal="habitModal">Cancel</button>
+          <button class="button button-primary" type="submit">Save habit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="entryModal" hidden>
+    <div class="modal entry-modal" role="dialog" aria-modal="true" aria-labelledby="entryModalTitle">
+      <div class="modal-header">
+        <div>
+          <span class="eyebrow" id="entryDateLabel"></span>
+          <h2 id="entryModalTitle">Update day</h2>
+        </div>
+        <button class="icon-button modal-close" data-close-modal="entryModal" aria-label="Close">×</button>
+      </div>
+
+      <form id="entryForm" class="form-grid">
+        <input id="entryHabitId" type="hidden" />
+        <input id="entryDate" type="hidden" />
+
+        <label class="field field-span-2">
+          <span id="entryValueLabel">Actual result</span>
+          <div class="value-input-wrap">
+            <input id="entryValue" type="number" min="0" step="any" placeholder="0" required />
+            <span id="entryUnitBadge" class="input-unit"></span>
+          </div>
+        </label>
+
+        <div class="entry-percent-preview field-span-2">
+          <span>Result</span>
+          <strong id="entryPercentPreview">—</strong>
+        </div>
+
+        <label class="field field-span-2">
+          <span>Note <em>optional</em></span>
+          <textarea id="entryNote" rows="3" maxlength="220" placeholder="Контекст дня, если нужен…"></textarea>
+        </label>
+
+        <div class="modal-actions field-span-2">
+          <button class="button button-danger button-left" id="clearEntryBtn" type="button">Clear day</button>
+          <button class="button button-ghost" type="button" data-close-modal="entryModal">Cancel</button>
+          <button class="button button-primary" type="submit">Save day</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
