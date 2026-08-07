@@ -2,7 +2,7 @@
   "use strict";
 
   const STORAGE_KEY = "l-manager:data:v1";
-  const APP_VERSION = "0.3.0";
+  const APP_VERSION = "0.3.1";
   const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const MONTH_FORMAT = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" });
   const DATE_FORMAT = new Intl.DateTimeFormat("ru", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
@@ -13,6 +13,7 @@
   let selectedHabitId = null;
   let relationHabitAId = null;
   let relationHabitBId = null;
+  let relationOverlayHabitIds = [];
   let relationMode = "overlay";
 
   const els = {
@@ -34,6 +35,9 @@
     habitTrendChart: document.querySelector("#habitTrendChart"),
     trendCaption: document.querySelector("#trendCaption"),
     habitComparison: document.querySelector("#habitComparison"),
+    relationPairControls: document.querySelector("#relationPairControls"),
+    relationOverlayControls: document.querySelector("#relationOverlayControls"),
+    relationOverlayList: document.querySelector("#relationOverlayList"),
     relationHabitA: document.querySelector("#relationHabitA"),
     relationHabitB: document.querySelector("#relationHabitB"),
     relationOverlayBtn: document.querySelector("#relationOverlayBtn"),
@@ -176,6 +180,18 @@
       ensureRelationHabits();
       renderRelations();
     });
+    els.relationOverlayList.addEventListener("change", (event) => {
+      const checkbox = event.target.closest("input[type=checkbox][data-overlay-habit]");
+      if (!checkbox) return;
+      const habitId = checkbox.dataset.overlayHabit;
+      if (checkbox.checked) {
+        if (!relationOverlayHabitIds.includes(habitId)) relationOverlayHabitIds.push(habitId);
+      } else {
+        relationOverlayHabitIds = relationOverlayHabitIds.filter((id) => id !== habitId);
+      }
+      ensureRelationHabits();
+      renderRelations();
+    });
     [els.relationOverlayBtn, els.relationScatterBtn].forEach((button) => {
       button.addEventListener("click", () => {
         relationMode = button.dataset.relationMode;
@@ -194,6 +210,7 @@
       selectedHabitId = null;
       relationHabitAId = null;
       relationHabitBId = null;
+      relationOverlayHabitIds = [];
       els.habitList.innerHTML = "";
       els.monthSummary.innerHTML = `
         <div class="summary-item"><span>habits</span><strong>0</strong></div>
@@ -534,6 +551,7 @@
     if (!state.habits.length) {
       relationHabitAId = null;
       relationHabitBId = null;
+      relationOverlayHabitIds = [];
       return;
     }
 
@@ -546,6 +564,27 @@
     if (!state.habits.some((habit) => habit.id === relationHabitBId) || (relationHabitBId === relationHabitAId && state.habits.length > 1)) {
       relationHabitBId = state.habits.find((habit) => habit.id !== relationHabitAId)?.id || relationHabitAId;
     }
+
+    const validIds = new Set(state.habits.map((habit) => habit.id));
+    relationOverlayHabitIds = relationOverlayHabitIds.filter((id) => validIds.has(id));
+    if (relationOverlayHabitIds.length === 0) {
+      relationOverlayHabitIds = state.habits.slice(0, Math.min(4, state.habits.length)).map((habit) => habit.id);
+    }
+    if (selectedHabitId && validIds.has(selectedHabitId) && !relationOverlayHabitIds.includes(selectedHabitId)) {
+      relationOverlayHabitIds = [selectedHabitId, ...relationOverlayHabitIds].slice(0, Math.min(6, state.habits.length));
+    }
+  }
+
+  function renderOverlayHabitPicker() {
+    if (!els.relationOverlayList) return;
+    els.relationOverlayList.innerHTML = state.habits.map((habit) => {
+      const checked = relationOverlayHabitIds.includes(habit.id) ? 'checked' : '';
+      return `<label class="relation-overlay-item">
+        <input type="checkbox" data-overlay-habit="${habit.id}" ${checked} />
+        <span class="relation-overlay-swatch" style="--relation-color:${habit.color}"></span>
+        <span class="relation-overlay-name">${escapeHtml(habit.name)}</span>
+      </label>`;
+    }).join("");
   }
 
   function renderRelations() {
@@ -562,9 +601,33 @@
     els.relationHabitA.value = habitA.id;
     els.relationHabitB.value = habitB.id;
     els.relationHabitB.disabled = state.habits.length < 2;
+    renderOverlayHabitPicker();
 
-    els.relationOverlayBtn.classList.toggle("selected", relationMode === "overlay");
+    const overlayMode = relationMode === "overlay";
+    els.relationPairControls.hidden = overlayMode;
+    els.relationOverlayControls.hidden = !overlayMode;
+    els.relationOverlayBtn.classList.toggle("selected", overlayMode);
     els.relationScatterBtn.classList.toggle("selected", relationMode === "scatter");
+
+    if (overlayMode) {
+      const selectedHabits = state.habits.filter((habit) => relationOverlayHabitIds.includes(habit.id));
+      if (!selectedHabits.length) {
+        els.relationMeta.innerHTML = `<span class="relation-empty">Select at least one habit to draw the overlay.</span>`;
+        els.relationChart.innerHTML = `<div class="relation-empty-chart">No habits selected</div>`;
+        return;
+      }
+
+      const trackedDays = getOverlayTrackedDayCount(selectedHabits, viewDate);
+      els.relationMeta.innerHTML = `
+        <div class="relation-legend">
+          ${selectedHabits.map((habit) => `<span><i style="--relation-color:${habit.color}"></i>${escapeHtml(habit.name)}</span>`).join("")}
+        </div>
+        <div class="relation-correlation relation-overlay-summary">
+          <span>overlay</span><strong>${selectedHabits.length}</strong><em>${selectedHabits.length === 1 ? 'habit selected' : 'habits selected'}</em><small>${trackedDays} tracked day${trackedDays === 1 ? '' : 's'} this month</small>
+        </div>`;
+      els.relationChart.innerHTML = renderRelationOverlayMulti(selectedHabits, viewDate);
+      return;
+    }
 
     if (state.habits.length < 2) {
       els.relationMeta.innerHTML = `<span class="relation-empty">Add a second habit to compare relationships.</span>`;
@@ -586,9 +649,18 @@
         <span>r</span><strong>${correlationText}</strong><em>${escapeHtml(relationLabel)}</em><small>${paired.length} shared days</small>
       </div>`;
 
-    els.relationChart.innerHTML = relationMode === "scatter"
-      ? renderRelationScatter(habitA, habitB, paired)
-      : renderRelationOverlay(habitA, habitB, viewDate);
+    els.relationChart.innerHTML = renderRelationScatter(habitA, habitB, paired);
+  }
+
+  function getOverlayTrackedDayCount(habits, date) {
+    const days = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+    let count = 0;
+    for (let day = 1; day <= days; day += 1) {
+      const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      const hasEntry = habits.some((habit) => state.entries[entryKey(habit.id, dateKey)]);
+      if (hasEntry) count += 1;
+    }
+    return count;
   }
 
   function getPairedRelationData(habitA, habitB, date) {
@@ -645,12 +717,12 @@
     return denominator > 0 ? numerator / denominator : null;
   }
 
-  function renderRelationOverlay(habitA, habitB, date) {
+  function renderRelationOverlayMulti(habits, date) {
     const width = 336;
     const height = 205;
     const pad = { left: 34, right: 10, top: 20, bottom: 25 };
     const days = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-    const series = [habitA, habitB].map((habit) => {
+    const series = habits.map((habit) => {
       const values = [];
       for (let day = 1; day <= days; day += 1) {
         const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
@@ -689,7 +761,7 @@
         ? `<polyline points="${segment.join(" ")}" fill="none" stroke="${habit.color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".92" />`
         : "").join("");
       const points = values.map((value, index) => value == null || !Number.isFinite(value) ? "" :
-        `<circle cx="${xFor(index).toFixed(2)}" cy="${yFor(value).toFixed(2)}" r="2.6" fill="${habit.color}" stroke="#111319" stroke-width="1.3"><title>${escapeHtml(habit.name)} · day ${index + 1}: ${formatPercent(value)}%</title></circle>`).join("");
+        `<circle cx="${xFor(index).toFixed(2)}" cy="${yFor(value).toFixed(2)}" r="2.5" fill="${habit.color}" stroke="#111319" stroke-width="1.2"><title>${escapeHtml(habit.name)} · day ${index + 1}: ${formatPercent(value)}%</title></circle>`).join("");
       return lines + points;
     }).join("");
 
@@ -698,7 +770,7 @@
     const empty = finite.length === 0 ? `<text x="${width / 2}" y="${height / 2}" text-anchor="middle" class="chart-empty-label">No tracked data yet</text>` : "";
 
     return `<div class="relation-chart-caption">Overlay uses % of target so habits with different units share one scale.</div>
-      <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Overlay comparison of ${escapeHtml(habitA.name)} and ${escapeHtml(habitB.name)}">
+      <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Overlay comparison of selected habits">
         ${grids}${paths}${xLabels}${empty}
       </svg>`;
   }

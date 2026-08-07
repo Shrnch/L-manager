@@ -1,4 +1,4 @@
-# L manager v0.3.0
+# L manager v0.3.1
 
 Local-first habit / life tracker inspired by the old spreadsheet workflow.
 

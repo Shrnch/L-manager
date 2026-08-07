@@ -98,11 +98,11 @@
             <div class="insight-section-heading">
               <div>
                 <h3>Relations</h3>
-                <p>Compare two habits on the same days</p>
+                <p>Overlay many habits or compare two on the same days</p>
               </div>
             </div>
 
-            <div class="relation-controls">
+            <div id="relationPairControls" class="relation-controls">
               <label class="relation-select">
                 <span>A</span>
                 <select id="relationHabitA"></select>
@@ -111,6 +111,14 @@
                 <span>B</span>
                 <select id="relationHabitB"></select>
               </label>
+            </div>
+
+            <div id="relationOverlayControls" class="relation-overlay-controls" hidden>
+              <div class="relation-overlay-heading">
+                <strong>Overlay habits</strong>
+                <small>Select as many habits as you want</small>
+              </div>
+              <div id="relationOverlayList" class="relation-overlay-list"></div>
             </div>
 
             <div class="relation-mode-switch" role="group" aria-label="Relation visualization mode">
