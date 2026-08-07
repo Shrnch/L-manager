@@ -384,3 +384,30 @@ button { color: inherit; }
   .button-left { margin-right: 0; }
   .modal-actions .button-danger { width: 100%; order: 3; margin-top: 5px; }
 }
+
+
+.boolean-entry {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.boolean-choice {
+  height: 52px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.03);
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 750;
+}
+.boolean-choice:hover {
+  background: rgba(255,255,255,0.065);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+.boolean-choice.selected {
+  background: rgba(124,92,252,0.16);
+  border-color: rgba(124,92,252,0.65);
+  color: #fff;
+  box-shadow: 0 0 0 3px rgba(124,92,252,0.08);
+}

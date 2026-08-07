@@ -79,6 +79,7 @@
           <select id="habitTrackingType">
             <option value="target">Target value</option>
             <option value="percent">Manual percent</option>
+            <option value="boolean">Yes / No</option>
           </select>
         </label>
 
@@ -127,13 +128,18 @@
         <input id="entryHabitId" type="hidden" />
         <input id="entryDate" type="hidden" />
 
-        <label class="field field-span-2">
+        <label class="field field-span-2" id="entryValueField">
           <span id="entryValueLabel">Actual result</span>
           <div class="value-input-wrap">
             <input id="entryValue" type="number" min="0" step="any" placeholder="0" required />
             <span id="entryUnitBadge" class="input-unit"></span>
           </div>
         </label>
+
+        <div class="boolean-entry field-span-2" id="booleanEntry" hidden>
+          <button class="boolean-choice" id="entryYesBtn" type="button" data-boolean-value="1">Yes</button>
+          <button class="boolean-choice" id="entryNoBtn" type="button" data-boolean-value="0">No</button>
+        </div>
 
         <div class="entry-percent-preview field-span-2">
           <span>Result</span>

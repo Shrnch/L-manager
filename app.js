@@ -2,7 +2,7 @@
   "use strict";
 
   const STORAGE_KEY = "l-manager:data:v1";
-  const APP_VERSION = "0.1.0";
+  const APP_VERSION = "0.1.1";
   const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const MONTH_FORMAT = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" });
   const DATE_FORMAT = new Intl.DateTimeFormat("ru", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
@@ -45,9 +45,13 @@
     entryDate: document.querySelector("#entryDate"),
     entryDateLabel: document.querySelector("#entryDateLabel"),
     entryModalTitle: document.querySelector("#entryModalTitle"),
+    entryValueField: document.querySelector("#entryValueField"),
     entryValueLabel: document.querySelector("#entryValueLabel"),
     entryValue: document.querySelector("#entryValue"),
     entryUnitBadge: document.querySelector("#entryUnitBadge"),
+    booleanEntry: document.querySelector("#booleanEntry"),
+    entryYesBtn: document.querySelector("#entryYesBtn"),
+    entryNoBtn: document.querySelector("#entryNoBtn"),
     entryPercentPreview: document.querySelector("#entryPercentPreview"),
     entryNote: document.querySelector("#entryNote"),
     clearEntryBtn: document.querySelector("#clearEntryBtn"),
@@ -128,6 +132,9 @@
     els.deleteHabitBtn.addEventListener("click", deleteCurrentHabit);
 
     els.entryValue.addEventListener("input", updateEntryPreview);
+    [els.entryYesBtn, els.entryNoBtn].forEach((button) => {
+      button.addEventListener("click", () => setBooleanEntry(Number(button.dataset.booleanValue)));
+    });
     els.entryForm.addEventListener("submit", saveEntryFromForm);
     els.clearEntryBtn.addEventListener("click", clearCurrentEntry);
 
@@ -167,7 +174,9 @@
     const stats = computeHabitStats(habit, monthEntries);
     const meta = habit.trackingType === "percent"
       ? "Manual percentage · no upper limit"
-      : `Target: ${formatNumber(habit.target)}${habit.unit ? ` ${escapeHtml(habit.unit)}` : ""} / day`;
+      : habit.trackingType === "boolean"
+        ? "Yes / No"
+        : `Target: ${formatNumber(habit.target)}${habit.unit ? ` ${escapeHtml(habit.unit)}` : ""} / day`;
 
     const weekdays = WEEKDAYS.map((day) => `<div class="weekday">${day}</div>`).join("");
     const cells = calendar.map((date) => renderDayCell(habit, date)).join("");
@@ -185,7 +194,7 @@
           <div class="habit-actions">
             <div class="habit-kpis">
               <div class="habit-kpi"><span>avg</span><strong>${stats.average == null ? "—" : `${formatPercent(stats.average)}%`}</strong></div>
-              <div class="habit-kpi"><span>100%+</span><strong>${stats.hitTarget}</strong></div>
+              <div class="habit-kpi"><span>${habit.trackingType === "boolean" ? "yes" : "100%+"}</span><strong>${stats.hitTarget}</strong></div>
               <div class="habit-kpi"><span>tracked</span><strong>${stats.tracked}</strong></div>
             </div>
             <button class="icon-button edit-habit" type="button" data-edit-habit="${habit.id}" aria-label="Edit ${escapeHtml(habit.name)}">•••</button>
@@ -221,13 +230,17 @@
       style = `--entry-bg:${bg};`;
       const valueText = habit.trackingType === "percent"
         ? "manual"
-        : `${formatNumber(entry.value)}${habit.unit ? ` ${escapeHtml(habit.unit)}` : ""}`;
+        : habit.trackingType === "boolean"
+          ? (Number(entry.value) === 1 ? "Yes" : "No")
+          : `${formatNumber(entry.value)}${habit.unit ? ` ${escapeHtml(habit.unit)}` : ""}`;
       const noteDot = entry.note ? `<span class="day-note-dot" title="Has note"></span>` : "";
       content = `
         <div class="day-top"><span class="day-number">${date.getDate()}</span>${noteDot}</div>
         <span class="day-value">${valueText}</span>
-        <strong class="day-percent">${formatPercent(percent)}%</strong>`;
-      title += ` · ${formatPercent(percent)}%`;
+        <strong class="day-percent">${habit.trackingType === "boolean" ? (Number(entry.value) === 1 ? "YES" : "NO") : `${formatPercent(percent)}%`}</strong>`;
+      title += habit.trackingType === "boolean"
+        ? ` · ${Number(entry.value) === 1 ? "Yes" : "No"}`
+        : ` · ${formatPercent(percent)}%`;
       if (entry.note) title += ` · ${entry.note}`;
     }
 
@@ -277,13 +290,16 @@
   }
 
   function syncTrackingFields() {
-    const manual = els.habitTrackingType.value === "percent";
-    els.targetValueField.hidden = manual;
-    els.unitField.hidden = manual;
-    els.habitTarget.required = !manual;
-    els.trackingHint.textContent = manual
+    const type = els.habitTrackingType.value;
+    const needsTarget = type === "target";
+    els.targetValueField.hidden = !needsTarget;
+    els.unitField.hidden = !needsTarget;
+    els.habitTarget.required = needsTarget;
+    els.trackingHint.textContent = type === "percent"
       ? "Вводишь процент напрямую. Можно записать 0%, 124%, 500% или любое другое неотрицательное значение."
-      : "Вводишь фактическое значение — процент считается автоматически. Верхнего лимита нет.";
+      : type === "boolean"
+        ? "Для каждого дня выбираешь только Yes или No. Пустой день остаётся отдельным состоянием — без записи."
+        : "Вводишь фактическое значение — процент считается автоматически. Верхнего лимита нет.";
   }
 
   function saveHabitFromForm(event) {
@@ -304,7 +320,7 @@
       name: els.habitName.value.trim(),
       trackingType,
       target: trackingType === "target" ? target : 100,
-      unit: trackingType === "target" ? els.habitUnit.value.trim() : "%",
+      unit: trackingType === "target" ? els.habitUnit.value.trim() : trackingType === "percent" ? "%" : "",
       color,
       createdAt: state.habits.find((item) => item.id === id)?.createdAt || new Date().toISOString(),
     };
@@ -345,15 +361,20 @@
     els.entryDate.value = dateKey;
     els.entryDateLabel.textContent = DATE_FORMAT.format(date);
     els.entryModalTitle.textContent = habit.name;
-    els.entryValue.value = entry?.value ?? "";
+    els.entryValue.value = habit.trackingType === "boolean" ? "" : (entry?.value ?? "");
     els.entryNote.value = entry?.note || "";
     els.clearEntryBtn.hidden = !entry;
+    els.entryValueField.hidden = habit.trackingType === "boolean";
+    els.booleanEntry.hidden = habit.trackingType !== "boolean";
+    els.entryValue.required = habit.trackingType !== "boolean";
+    els.booleanEntry.dataset.value = habit.trackingType === "boolean" && entry ? String(Number(entry.value) === 1 ? 1 : 0) : "";
+    syncBooleanButtons();
 
     if (habit.trackingType === "percent") {
       els.entryValueLabel.textContent = "Percentage";
       els.entryUnitBadge.textContent = "%";
       els.entryValue.placeholder = "100";
-    } else {
+    } else if (habit.trackingType === "target") {
       els.entryValueLabel.textContent = "Actual result";
       els.entryUnitBadge.textContent = habit.unit || "";
       els.entryValue.placeholder = String(habit.target);
@@ -364,10 +385,31 @@
     setTimeout(() => els.entryValue.focus(), 30);
   }
 
+  function setBooleanEntry(value) {
+    els.booleanEntry.dataset.value = String(value === 1 ? 1 : 0);
+    syncBooleanButtons();
+    updateEntryPreview();
+  }
+
+  function syncBooleanButtons() {
+    const selected = els.booleanEntry.dataset.value;
+    els.entryYesBtn.classList.toggle("selected", selected === "1");
+    els.entryNoBtn.classList.toggle("selected", selected === "0");
+  }
+
   function updateEntryPreview() {
     const habit = state.habits.find((item) => item.id === els.entryHabitId.value);
+    if (!habit) {
+      els.entryPercentPreview.textContent = "—";
+      return;
+    }
+    if (habit.trackingType === "boolean") {
+      const selected = els.booleanEntry.dataset.value;
+      els.entryPercentPreview.textContent = selected === "1" ? "Yes" : selected === "0" ? "No" : "—";
+      return;
+    }
     const value = Number(els.entryValue.value);
-    if (!habit || els.entryValue.value === "" || !Number.isFinite(value) || value < 0) {
+    if (els.entryValue.value === "" || !Number.isFinite(value) || value < 0) {
       els.entryPercentPreview.textContent = "—";
       return;
     }
@@ -379,8 +421,20 @@
     event.preventDefault();
     const habitId = els.entryHabitId.value;
     const dateKey = els.entryDate.value;
-    const value = Number(els.entryValue.value);
-    if (!Number.isFinite(value) || value < 0) return;
+    const habit = state.habits.find((item) => item.id === habitId);
+    if (!habit) return;
+
+    let value;
+    if (habit.trackingType === "boolean") {
+      if (els.booleanEntry.dataset.value !== "1" && els.booleanEntry.dataset.value !== "0") {
+        showToast("Choose Yes or No");
+        return;
+      }
+      value = Number(els.booleanEntry.dataset.value);
+    } else {
+      value = Number(els.entryValue.value);
+      if (!Number.isFinite(value) || value < 0) return;
+    }
 
     state.entries[entryKey(habitId, dateKey)] = {
       value,
@@ -406,6 +460,7 @@
   function getEntryPercent(habit, entry) {
     if (!entry) return null;
     if (habit.trackingType === "percent") return Number(entry.value) || 0;
+    if (habit.trackingType === "boolean") return Number(entry.value) === 1 ? 100 : 0;
     return habit.target > 0 ? ((Number(entry.value) || 0) / habit.target) * 100 : 0;
   }
 
