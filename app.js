@@ -2,7 +2,7 @@
   "use strict";
 
   const STORAGE_KEY = "l-manager:data:v1";
-  const APP_VERSION = "0.3.7";
+  const APP_VERSION = "0.3.8";
   const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const MONTH_FORMAT = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" });
   const DATE_FORMAT = new Intl.DateTimeFormat("ru", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
@@ -364,9 +364,14 @@
           : `${formatNumber(entry.value)}${habit.unit ? ` ${escapeHtml(habit.unit)}` : ""}`;
       const noteDot = entry.note ? `<span class="day-note-dot" title="Has note"></span>` : "";
       const showPercentages = state.settings?.showPercentages !== false;
-      const detailContent = showPercentages
-        ? `<span class="day-value">${valueText}</span><strong class="day-percent">${habit.trackingType === "boolean" ? (Number(entry.value) === 1 ? "YES" : "NO") : `${formatPercent(percent)}%`}</strong>`
-        : "";
+      let detailContent = "";
+      if (habit.trackingType === "boolean") {
+        detailContent = `<strong class="day-percent">${Number(entry.value) === 1 ? "YES" : "NO"}</strong>`;
+      } else if (habit.trackingType === "percent") {
+        detailContent = showPercentages ? `<strong class="day-percent">${formatPercent(percent)}%</strong>` : "";
+      } else {
+        detailContent = `<span class="day-value">${valueText}</span>${showPercentages ? `<strong class="day-percent">${formatPercent(percent)}%</strong>` : ""}`;
+      }
       content = `
         <div class="day-top"><span class="day-number">${date.getDate()}</span>${noteDot}</div>
         ${detailContent}`;

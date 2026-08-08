@@ -1,4 +1,4 @@
-# L manager v0.3.7
+# L manager v0.3.8
 
 Local-first habit / life tracker inspired by the old spreadsheet workflow.
 
@@ -41,6 +41,12 @@ Use **Export** regularly if you want a portable backup.
 ### v0.3.4
 Negative numerical habits no longer floor at 0%. Their score continues linearly below zero when the result exceeds 2× the target, and trend/overlay charts now display negative percentages.
 
+
+## v0.3.8
+- Fixed **Показать проценты** so it hides only percentage labels.
+- Numeric values remain visible when percentages are hidden.
+- YES / NO labels remain visible for boolean habits.
+- Manual-percent habits still become shade-only when percentage labels are hidden.
 
 ## v0.3.7
 - Added a persistent **Показать проценты** display toggle.
