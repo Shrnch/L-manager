@@ -173,11 +173,7 @@
 
         <label class="field" id="targetValueField">
           <span>Daily target</span>
-          <input id="habitTarget" type="number" min="0" step="any" value="1" required />
-          <select id="habitBooleanTarget" hidden>
-            <option value="1">Yes</option>
-            <option value="0">No</option>
-          </select>
+          <input id="habitTarget" type="number" min="0.000001" step="any" value="1" required />
         </label>
 
         <label class="field" id="unitField">
@@ -192,6 +188,15 @@
             <input id="habitColorText" type="text" value="#7C5CFC" maxlength="7" spellcheck="false" />
           </div>
         </div>
+        <label class="negative-habit-toggle" id="negativeHabitField">
+          <span class="negative-habit-copy">
+            <strong>Negative habit</strong>
+            <small>For numbers, lower is better. Yes / No still aims for Yes.</small>
+          </span>
+          <input id="habitNegative" type="checkbox" />
+          <span class="toggle-switch" aria-hidden="true"></span>
+        </label>
+
 
         <div class="form-hint field-span-2" id="trackingHint">
           Вводишь фактическое значение — процент считается автоматически. Верхнего лимита нет.

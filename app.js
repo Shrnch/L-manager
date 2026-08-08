@@ -2,7 +2,7 @@
   "use strict";
 
   const STORAGE_KEY = "l-manager:data:v1";
-  const APP_VERSION = "0.3.1";
+  const APP_VERSION = "0.3.2";
   const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const MONTH_FORMAT = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" });
   const DATE_FORMAT = new Intl.DateTimeFormat("ru", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
@@ -52,7 +52,8 @@
     habitName: document.querySelector("#habitName"),
     habitTrackingType: document.querySelector("#habitTrackingType"),
     habitTarget: document.querySelector("#habitTarget"),
-    habitBooleanTarget: document.querySelector("#habitBooleanTarget"),
+    habitNegative: document.querySelector("#habitNegative"),
+    negativeHabitField: document.querySelector("#negativeHabitField"),
     habitUnit: document.querySelector("#habitUnit"),
     habitColor: document.querySelector("#habitColor"),
     habitColorText: document.querySelector("#habitColorText"),
@@ -97,11 +98,40 @@
       if (!raw) return defaultState();
       const parsed = JSON.parse(raw);
       if (!parsed || !Array.isArray(parsed.habits) || typeof parsed.entries !== "object") return defaultState();
-      return {
-        version: APP_VERSION,
-        habits: parsed.habits,
-        entries: parsed.entries || {},
-      };
+
+      const entries = parsed.entries || {};
+      let migrated = false;
+      const habits = parsed.habits.map((habit) => {
+        const hadNegativeFlag = typeof habit.negativeHabit === "boolean";
+        const legacyBooleanNegative = !hadNegativeFlag && habit.trackingType === "boolean" && Number(habit.target) === 0;
+        const legacyNumericNegative = !hadNegativeFlag && habit.trackingType === "target" && Number(habit.target) === 0;
+        const negativeHabit = hadNegativeFlag ? habit.negativeHabit : (legacyBooleanNegative || legacyNumericNegative);
+
+        if (legacyBooleanNegative) {
+          const prefix = `${habit.id}::`;
+          Object.entries(entries).forEach(([key, entry]) => {
+            if (!key.startsWith(prefix) || !entry) return;
+            const value = Number(entry.value);
+            if (value === 0 || value === 1) entry.value = value === 1 ? 0 : 1;
+          });
+          migrated = true;
+        }
+        if (!hadNegativeFlag || Object.prototype.hasOwnProperty.call(habit, "negativeTarget")) migrated = true;
+
+        const normalized = {
+          ...habit,
+          negativeHabit,
+          target: habit.trackingType === "boolean" ? 1 : habit.target,
+        };
+        delete normalized.negativeTarget;
+        return normalized;
+      });
+
+      const normalizedState = { version: APP_VERSION, habits, entries };
+      if (migrated || parsed.version !== APP_VERSION) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizedState));
+      }
+      return normalizedState;
     } catch (error) {
       console.warn("L manager: failed to load local data", error);
       return defaultState();
@@ -143,7 +173,7 @@
 
     els.habitTrackingType.addEventListener("change", syncTrackingFields);
     els.habitTarget.addEventListener("input", syncTrackingFields);
-    els.habitBooleanTarget.addEventListener("change", syncTrackingFields);
+    els.habitNegative.addEventListener("change", syncTrackingFields);
     els.habitColor.addEventListener("input", () => {
       els.habitColorText.value = els.habitColor.value.toUpperCase();
     });
@@ -246,16 +276,15 @@
     const calendar = getCalendarDays(viewDate);
     const monthEntries = getHabitMonthEntries(habit.id, viewDate);
     const stats = computeHabitStats(habit, monthEntries);
-    const isNegativeTarget = habit.trackingType === "target" && Number(habit.target) === 0;
-    const booleanTarget = getBooleanTarget(habit);
+    const negativeHabit = Boolean(habit.negativeHabit);
     const meta = habit.trackingType === "percent"
       ? "Manual percentage · no upper limit"
       : habit.trackingType === "boolean"
-        ? booleanTarget === 0
-          ? `<span class="negative-target-badge">Negative habit</span> · Daily target: No`
-          : `<span class="positive-target-badge">Positive habit</span> · Daily target: Yes`
-        : isNegativeTarget
-          ? `<span class="negative-target-badge">Negative target</span> · Target: 0${habit.unit ? ` ${escapeHtml(habit.unit)}` : ""} / day`
+        ? negativeHabit
+          ? `<span class="negative-target-badge">Negative habit</span> · Yes = success`
+          : `<span class="positive-target-badge">Positive habit</span> · Yes = success`
+        : negativeHabit
+          ? `<span class="negative-target-badge">Negative habit</span> · Lower is better · Target: ${formatNumber(habit.target)}${habit.unit ? ` ${escapeHtml(habit.unit)}` : ""} / day`
           : `Target: ${formatNumber(habit.target)}${habit.unit ? ` ${escapeHtml(habit.unit)}` : ""} / day`;
 
     const weekdays = WEEKDAYS.map((day) => `<div class="weekday">${day}</div>`).join("");
@@ -924,7 +953,7 @@
     els.habitName.value = habit?.name || "";
     els.habitTrackingType.value = habit?.trackingType || "target";
     els.habitTarget.value = habit?.trackingType === "target" ? (habit.target ?? 1) : 1;
-    els.habitBooleanTarget.value = habit?.trackingType === "boolean" ? String(getBooleanTarget(habit)) : "1";
+    els.habitNegative.checked = Boolean(habit?.negativeHabit);
     els.habitUnit.value = habit?.unit || "";
     els.habitColor.value = habit?.color || "#7C5CFC";
     els.habitColorText.value = (habit?.color || "#7C5CFC").toUpperCase();
@@ -937,25 +966,30 @@
     const type = els.habitTrackingType.value;
     const isTarget = type === "target";
     const isBoolean = type === "boolean";
-    els.targetValueField.hidden = type === "percent";
+    const isPercent = type === "percent";
+    const isNegative = els.habitNegative.checked;
+
+    els.targetValueField.hidden = !isTarget;
+    els.targetValueField.style.display = isTarget ? "flex" : "none";
     els.unitField.hidden = !isTarget;
-    els.habitTarget.hidden = !isTarget;
-    els.habitBooleanTarget.hidden = !isBoolean;
+    els.unitField.style.display = isTarget ? "flex" : "none";
     els.habitTarget.required = isTarget;
 
-    const targetValue = Number(els.habitTarget.value);
-    const isNegativeTarget = isTarget && els.habitTarget.value !== "" && targetValue === 0;
-    const booleanTarget = Number(els.habitBooleanTarget.value);
+    els.negativeHabitField.hidden = isPercent;
+    els.negativeHabitField.style.display = isPercent ? "none" : "grid";
+    if (isPercent) els.habitNegative.checked = false;
 
-    els.trackingHint.textContent = type === "percent"
-      ? "Вводишь процент напрямую. Можно записать 0%, 124%, 500% или любое другое неотрицательное значение."
-      : isBoolean
-        ? booleanTarget === 0
-          ? "Negative habit: Daily target = No. День считается успешным, когда фактический результат — No; Yes считается нарушением."
-          : "Positive habit: Daily target = Yes. День считается успешным, когда фактический результат — Yes; No считается невыполнением."
-        : isNegativeTarget
-          ? "Negative target: идеальный результат — 0. Если за день значение 0, это 100%; любое значение выше 0 считается нарушением (0%)."
-          : "Вводишь фактическое значение — процент считается автоматически. Верхнего лимита нет.";
+    if (isPercent) {
+      els.trackingHint.textContent = "Вводишь процент напрямую. Можно записать 0%, 124%, 500% или любое другое неотрицательное значение.";
+    } else if (isBoolean) {
+      els.trackingHint.textContent = isNegative
+        ? "Negative habit: Yes всё равно означает успешный день. Формулируй привычку как желаемое состояние — например «Не курить» → Yes."
+        : "Yes означает успешный день, No — невыполнение.";
+    } else if (isNegative) {
+      els.trackingHint.textContent = "Negative habit: чем фактическое значение меньше, тем лучше. Daily target = 100%; ниже target даёт больше 100%, выше target — меньше 100%.";
+    } else {
+      els.trackingHint.textContent = "Вводишь фактическое значение — процент считается автоматически. Чем больше относительно target, тем лучше; верхнего лимита нет.";
+    }
   }
 
   function saveHabitFromForm(event) {
@@ -966,18 +1000,17 @@
     const color = normalizeHex(els.habitColorText.value) || els.habitColor.value;
 
     if (!els.habitName.value.trim()) return;
-    if (trackingType === "target" && (!Number.isFinite(target) || target < 0)) {
-      showToast("Target cannot be negative");
+    if (trackingType === "target" && (!Number.isFinite(target) || target <= 0)) {
+      showToast("Daily target must be greater than 0");
       return;
     }
 
-    const booleanTarget = Number(els.habitBooleanTarget.value) === 0 ? 0 : 1;
     const habit = {
       id,
       name: els.habitName.value.trim(),
       trackingType,
-      target: trackingType === "target" ? target : trackingType === "boolean" ? booleanTarget : 100,
-      negativeTarget: trackingType === "target" ? target === 0 : trackingType === "boolean" ? booleanTarget === 0 : false,
+      target: trackingType === "target" ? target : trackingType === "boolean" ? 1 : 100,
+      negativeHabit: trackingType === "percent" ? false : els.habitNegative.checked,
       unit: trackingType === "target" ? els.habitUnit.value.trim() : trackingType === "percent" ? "%" : "",
       color,
       createdAt: state.habits.find((item) => item.id === id)?.createdAt || new Date().toISOString(),
@@ -1081,7 +1114,7 @@
         return;
       }
       const value = Number(selected);
-      const success = value === getBooleanTarget(habit);
+      const success = value === 1;
       els.entryPercentPreview.textContent = `${value === 1 ? "Yes" : "No"} · ${success ? "100%" : "0%"}`;
       return;
     }
@@ -1090,11 +1123,7 @@
       els.entryPercentPreview.textContent = "—";
       return;
     }
-    const percent = habit.trackingType === "percent"
-      ? value
-      : Number(habit.target) === 0
-        ? (value === 0 ? 100 : 0)
-        : (value / habit.target) * 100;
+    const percent = getEntryPercent(habit, { value });
     els.entryPercentPreview.textContent = `${formatPercent(percent)}%`;
   }
 
@@ -1138,18 +1167,25 @@
     showToast("Day cleared");
   }
 
-  function getBooleanTarget(habit) {
-    if (habit?.trackingType !== "boolean") return 1;
-    // v0.1.1/v0.1.2 boolean habits stored target=100. Treat them as positive habits for compatibility.
-    return Number(habit.target) === 0 ? 0 : 1;
-  }
-
   function getEntryPercent(habit, entry) {
     if (!entry) return null;
-    if (habit.trackingType === "percent") return Number(entry.value) || 0;
-    if (habit.trackingType === "boolean") return Number(entry.value) === getBooleanTarget(habit) ? 100 : 0;
-    if (Number(habit.target) === 0) return Number(entry.value) === 0 ? 100 : 0;
-    return ((Number(entry.value) || 0) / habit.target) * 100;
+    const value = Number(entry.value) || 0;
+    if (habit.trackingType === "percent") return value;
+    if (habit.trackingType === "boolean") return value === 1 ? 100 : 0;
+
+    const target = Number(habit.target);
+    if (!Number.isFinite(target) || target < 0) return 0;
+
+    // Legacy target=0 habits from older builds keep their old binary scoring
+    // until the user edits them and supplies a positive reference target.
+    if (target === 0) return value === 0 ? 100 : 0;
+
+    if (habit.negativeHabit) {
+      // Negative numerical habits use the target as the 100% reference point:
+      // target = 100%, 0 = 200%, 2x target (or more) = 0%.
+      return Math.max(0, (2 - value / target) * 100);
+    }
+    return (value / target) * 100;
   }
 
   function computeHabitStats(habit, monthEntries) {

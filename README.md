@@ -1,4 +1,4 @@
-# L manager v0.3.1
+# L manager v0.3.2
 
 Local-first habit / life tracker inspired by the old spreadsheet workflow.
 
@@ -9,13 +9,13 @@ Open `index.html` in a modern browser. No server, npm install, account, or inter
 ## Core tracking
 
 - Create, edit and delete habits.
-- **Target value**: numeric daily target, automatic percentage, no upper cap.
+- **Target value**: numeric daily target, automatic percentage.
 - **Manual percent**: enter any percentage directly.
-- **Yes / No**: choose a daily target of Yes or No.
-  - Target Yes = Positive habit.
-  - Target No = Negative habit.
-  - Match = 100%, opposite = 0%.
-- Numeric target `0` = Negative target: actual 0 = 100%, anything above 0 = 0%.
+- **Yes / No**: Yes always means a successful day; No means failure.
+- **Negative habit** is a separate toggle:
+  - for **Yes / No**, Yes still means success (name the habit as the desired state, e.g. “No smoking”);
+  - for **Target value**, lower actual values are better;
+  - the target is the 100% reference point, 0 equals 200%, and 2× target or more equals 0%.
 - Empty day is different from a tracked 0% day.
 - Per-habit color, notes, monthly calendar, averages, success counts and streaks.
 - Local `localStorage` plus JSON Export / Import backups.
@@ -25,10 +25,10 @@ Open `index.html` in a modern browser. No server, npm install, account, or inter
 - Per-habit history matrix with dated daily squares and habit-specific shades.
 - Daily progress graph for the selected habit.
 - Monthly comparison across habits.
-- **Relations** mode for comparing two habits:
-  - **Overlay** puts both habits on one timeline using normalized `% of target` / success, so different units can share one graph.
-  - **Scatter** plots actual values from days where both habits were tracked.
-  - Pearson correlation `r` and a simple direction/strength label are shown for shared tracked days.
+- **Relations** mode:
+  - **Overlay** can draw multiple selected habits on one timeline using normalized performance percentages;
+  - **Scatter** compares two habits using actual values from shared tracked days;
+  - Pearson correlation `r` and a simple direction/strength label are shown for Scatter;
   - Scatter includes a trend line as a visual aid; correlation is association, not proof of causation.
 
 ## Data storage
