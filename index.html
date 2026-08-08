@@ -37,7 +37,14 @@
           <button class="icon-button" id="nextMonthBtn" aria-label="Next month">→</button>
         </div>
 
-        <div class="month-summary" id="monthSummary"></div>
+        <div class="month-toolbar-right">
+          <label class="display-toggle" title="When off, tracked days are shown by shade only">
+            <span>Показать проценты</span>
+            <input id="showPercentagesToggle" type="checkbox" checked />
+            <span class="toggle-switch display-toggle-switch" aria-hidden="true"></span>
+          </label>
+          <div class="month-summary" id="monthSummary"></div>
+        </div>
       </section>
 
       <section class="workspace-layout">

@@ -2,7 +2,7 @@
   "use strict";
 
   const STORAGE_KEY = "l-manager:data:v1";
-  const APP_VERSION = "0.3.6";
+  const APP_VERSION = "0.3.7";
   const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const MONTH_FORMAT = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" });
   const DATE_FORMAT = new Intl.DateTimeFormat("ru", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
@@ -22,6 +22,7 @@
     emptyState: document.querySelector("#emptyState"),
     monthLabel: document.querySelector("#monthLabel"),
     monthSummary: document.querySelector("#monthSummary"),
+    showPercentagesToggle: document.querySelector("#showPercentagesToggle"),
     prevMonthBtn: document.querySelector("#prevMonthBtn"),
     nextMonthBtn: document.querySelector("#nextMonthBtn"),
     monthButton: document.querySelector("#monthButton"),
@@ -90,6 +91,7 @@
       version: APP_VERSION,
       habits: [],
       entries: {},
+      settings: { showPercentages: true },
     };
   }
 
@@ -128,7 +130,14 @@
         return normalized;
       });
 
-      const normalizedState = { version: APP_VERSION, habits, entries };
+      const normalizedState = {
+        version: APP_VERSION,
+        habits,
+        entries,
+        settings: {
+          showPercentages: parsed.settings?.showPercentages !== false,
+        },
+      };
       if (migrated || parsed.version !== APP_VERSION) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizedState));
       }
@@ -149,6 +158,12 @@
     els.nextMonthBtn.addEventListener("click", () => changeMonth(1));
     els.monthButton.addEventListener("click", () => {
       viewDate = startOfMonth(new Date());
+      render();
+    });
+    els.showPercentagesToggle.addEventListener("change", () => {
+      state.settings = state.settings || {};
+      state.settings.showPercentages = els.showPercentagesToggle.checked;
+      saveState();
       render();
     });
 
@@ -233,6 +248,8 @@
   }
 
   function render() {
+    state.settings = state.settings || { showPercentages: true };
+    els.showPercentagesToggle.checked = state.settings.showPercentages !== false;
     els.monthLabel.textContent = MONTH_FORMAT.format(viewDate);
     els.emptyState.hidden = state.habits.length !== 0;
     els.habitList.hidden = state.habits.length === 0;
@@ -346,10 +363,13 @@
           ? (Number(entry.value) === 1 ? "Yes" : "No")
           : `${formatNumber(entry.value)}${habit.unit ? ` ${escapeHtml(habit.unit)}` : ""}`;
       const noteDot = entry.note ? `<span class="day-note-dot" title="Has note"></span>` : "";
+      const showPercentages = state.settings?.showPercentages !== false;
+      const detailContent = showPercentages
+        ? `<span class="day-value">${valueText}</span><strong class="day-percent">${habit.trackingType === "boolean" ? (Number(entry.value) === 1 ? "YES" : "NO") : `${formatPercent(percent)}%`}</strong>`
+        : "";
       content = `
         <div class="day-top"><span class="day-number">${date.getDate()}</span>${noteDot}</div>
-        <span class="day-value">${valueText}</span>
-        <strong class="day-percent">${habit.trackingType === "boolean" ? (Number(entry.value) === 1 ? "YES" : "NO") : `${formatPercent(percent)}%`}</strong>`;
+        ${detailContent}`;
       title += habit.trackingType === "boolean"
         ? ` · ${Number(entry.value) === 1 ? "Yes" : "No"}`
         : ` · ${formatPercent(percent)}%`;
@@ -1296,6 +1316,9 @@
 
       state.habits = incoming.habits;
       state.entries = incoming.entries || {};
+      state.settings = {
+        showPercentages: incoming.settings?.showPercentages !== false,
+      };
       relationOverlayHabitIds = [];
       relationOverlayInitialized = false;
       state.version = APP_VERSION;
