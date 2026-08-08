@@ -2,10 +2,99 @@
   "use strict";
 
   const STORAGE_KEY = "l-manager:data:v1";
-  const APP_VERSION = "0.3.8";
-  const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  const MONTH_FORMAT = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" });
-  const DATE_FORMAT = new Intl.DateTimeFormat("ru", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  const APP_VERSION = "0.3.9";
+
+  const I18N = {
+    en: {
+      habitTracker: "habit tracker", updateDay: "Update day", export: "Export", import: "Import", addHabit: "+ Habit", previousMonth: "Previous month", nextMonth: "Next month", today: "today",
+      showPercentages: "Show percentages", showPercentagesTitle: "When off, values remain visible but calculated percentages are hidden",
+      noHabitsYet: "No habits yet", emptyDescription: "Add your first habit. Set a numeric target and L manager calculates the result — 12%, 124%, 500%, or anything else.", createFirstHabit: "Create first habit",
+      habitVisualization: "Habit visualization", visualization: "Visualization", habitOverview: "Habit overview", habitHistory: "Habit history", habitHistoryDescription: "One row per habit · dated daily history", habitHistoryMatrix: "Habit history matrix",
+      habit: "Habit", dailyProgress: "Daily progress", relations: "Relations", relationsDescription: "Overlay many habits or compare two on the same days", overlayHabits: "Overlay habits", selectManyHabits: "Select as many habits as you want",
+      relationVisualizationMode: "Relation visualization mode", overlay: "Overlay", scatter: "Scatter", habitsThisMonth: "Habits this month", averageTrackedDays: "Average result for tracked days",
+      close: "Close", name: "Name", habitNamePlaceholder: "For example: Read", tracking: "Tracking", targetValue: "Target value", manualPercent: "Manual percent", yesNo: "Yes / No", dailyTarget: "Daily target", unit: "Unit", unitPlaceholder: "min, pages, km…", color: "Color",
+      negativeHabit: "Negative habit", negativeHabitDescription: "For numbers, lower is better. Yes / No still aims for Yes.", delete: "Delete", cancel: "Cancel", saveHabit: "Save habit",
+      yes: "Yes", no: "No", result: "Result", note: "Note", optional: "optional", notePlaceholder: "Context for the day, if useful…", clearDay: "Clear day", saveDay: "Save day",
+      habits: "habits", tracked: "tracked", avg: "avg", success: "success", bestStreak: "best streak", day: "day", days: "days", target: "Target", perDay: "/ day", lowerIsBetter: "Lower is better", positiveHabit: "Positive habit", yesSuccess: "Yes = success", manualPercentageNoLimit: "Manual percentage · no upper limit",
+      showVisualization: "Show visualization", editHabitAria: "Edit {name}", hasNote: "Has note", manual: "manual", future: "future", noData: "no data",
+      currentMonthTarget: "{month} · target line at 100%", noTrackedDays: "No tracked days yet", dailyPercentageTrend: "Daily percentage trend for {name}",
+      selectAtLeastOne: "Select at least one habit to draw the overlay.", noHabitsSelected: "No habits selected", habitSelected: "habit selected", habitsSelected: "habits selected", trackedDayThisMonth: "tracked day this month", trackedDaysThisMonth: "tracked days this month",
+      addSecondHabit: "Add a second habit to compare relationships.", twoHabitsNeeded: "Two habits are needed", pearsonTitle: "Pearson correlation across days where both habits were tracked", sharedDays: "shared days",
+      notEnoughVariation: "not enough variation", strong: "strong", moderate: "moderate", weak: "weak", little: "little", relation: "relation", inverse: "inverse relation", positive: "positive relation",
+      overlayCaption: "Overlay uses % of target so habits with different units share one scale.", overlayAria: "Overlay comparison of selected habits", noTrackedData: "No tracked data yet",
+      scatterCaption: "Scatter uses actual values from days where both habits were tracked.", noSharedDays: "No shared tracked days this month", eachDotCaption: "Each dot is one day · actual values · trend line shows direction, not causation.", scatterAria: "Scatter plot comparing {a} and {b}", value: "value",
+      newHabit: "New habit", editHabit: "Edit habit", hintPercent: "Enter the percentage directly. You can record 0%, 124%, 500%, or any other non-negative value.", hintBooleanNegative: "Negative habit: Yes still means a successful day. Phrase the habit as the desired state — for example “Do not smoke” → Yes.", hintBoolean: "Yes means a successful day; No means not completed.", hintTargetNegative: "Negative habit: the lower the actual value, the better. Daily target = 100%; below target gives more than 100%, above target gives less than 100%.", hintTarget: "Enter the actual value and the percentage is calculated automatically. The higher relative to target, the better; there is no upper limit.",
+      targetMustPositive: "Daily target must be greater than 0", habitUpdated: "Habit updated", habitCreated: "Habit created", deleteConfirm: "Delete “{name}” and all its tracked days?", habitDeleted: "Habit deleted",
+      percentage: "Percentage", actualResult: "Actual result", chooseYesNo: "Choose Yes or No", daySaved: "Day saved", dayCleared: "Day cleared", backupExported: "Backup exported", importConfirm: "Import will replace current L manager data. Continue?", backupImported: "Backup imported", importFailed: "Could not import this file",
+      language: "Language"
+    },
+    ru: {
+      habitTracker: "трекер привычек", updateDay: "Обновить день", export: "Экспорт", import: "Импорт", addHabit: "+ Привычка", previousMonth: "Предыдущий месяц", nextMonth: "Следующий месяц", today: "сегодня",
+      showPercentages: "Показать проценты", showPercentagesTitle: "Если выключено, значения остаются видны, но рассчитанные проценты скрываются",
+      noHabitsYet: "Пока нет привычек", emptyDescription: "Добавь первую привычку. Задай числовую цель, а L manager сам посчитает результат — хоть 12%, хоть 124%, хоть 500%.", createFirstHabit: "Создать первую привычку",
+      habitVisualization: "Визуализация привычек", visualization: "Визуализация", habitOverview: "Обзор привычки", habitHistory: "История привычек", habitHistoryDescription: "Одна строка на привычку · история по дням", habitHistoryMatrix: "Матрица истории привычек",
+      habit: "Привычка", dailyProgress: "Прогресс по дням", relations: "Связи", relationsDescription: "Накладывай несколько привычек или сравнивай две по одним и тем же дням", overlayHabits: "Привычки на графике", selectManyHabits: "Выбери любое количество привычек",
+      relationVisualizationMode: "Режим визуализации связей", overlay: "Наложение", scatter: "Рассеяние", habitsThisMonth: "Привычки за месяц", averageTrackedDays: "Средний результат по заполненным дням",
+      close: "Закрыть", name: "Название", habitNamePlaceholder: "Например: Читать", tracking: "Отслеживание", targetValue: "Целевое значение", manualPercent: "Процент вручную", yesNo: "Да / Нет", dailyTarget: "Дневная цель", unit: "Единица", unitPlaceholder: "мин, страниц, км…", color: "Цвет",
+      negativeHabit: "Негативная привычка", negativeHabitDescription: "Для чисел: чем меньше, тем лучше. В Да / Нет всё равно стремимся к Да.", delete: "Удалить", cancel: "Отмена", saveHabit: "Сохранить привычку",
+      yes: "Да", no: "Нет", result: "Результат", note: "Заметка", optional: "необязательно", notePlaceholder: "Контекст дня, если нужен…", clearDay: "Очистить день", saveDay: "Сохранить день",
+      habits: "привычки", tracked: "заполнено", avg: "среднее", success: "успех", bestStreak: "лучшая серия", day: "день", days: "дней", target: "Цель", perDay: "/ день", lowerIsBetter: "Чем меньше, тем лучше", positiveHabit: "Позитивная привычка", yesSuccess: "Да = успех", manualPercentageNoLimit: "Процент вручную · без верхнего лимита",
+      showVisualization: "Показать визуализацию", editHabitAria: "Редактировать {name}", hasNote: "Есть заметка", manual: "вручную", future: "будущее", noData: "нет данных",
+      currentMonthTarget: "{month} · линия цели на 100%", noTrackedDays: "Пока нет заполненных дней", dailyPercentageTrend: "Дневной процент для {name}",
+      selectAtLeastOne: "Выбери хотя бы одну привычку для наложения.", noHabitsSelected: "Привычки не выбраны", habitSelected: "привычка выбрана", habitsSelected: "привычек выбрано", trackedDayThisMonth: "заполненный день в этом месяце", trackedDaysThisMonth: "заполненных дней в этом месяце",
+      addSecondHabit: "Добавь вторую привычку, чтобы сравнивать связи.", twoHabitsNeeded: "Нужны две привычки", pearsonTitle: "Корреляция Пирсона по дням, где заполнены обе привычки", sharedDays: "общих дней",
+      notEnoughVariation: "недостаточно вариации", strong: "сильная", moderate: "средняя", weak: "слабая", little: "почти отсутствующая", relation: "связь", inverse: "обратная связь", positive: "положительная связь",
+      overlayCaption: "Наложение использует % от цели, поэтому привычки с разными единицами можно показать на одной шкале.", overlayAria: "Наложение выбранных привычек", noTrackedData: "Пока нет заполненных данных",
+      scatterCaption: "Рассеяние использует фактические значения только по дням, где заполнены обе привычки.", noSharedDays: "В этом месяце нет общих заполненных дней", eachDotCaption: "Каждая точка — один день · фактические значения · линия тренда показывает направление, а не причинность.", scatterAria: "Диаграмма рассеяния: {a} и {b}", value: "значение",
+      newHabit: "Новая привычка", editHabit: "Редактировать привычку", hintPercent: "Вводишь процент напрямую. Можно записать 0%, 124%, 500% или любое другое неотрицательное значение.", hintBooleanNegative: "Негативная привычка: Да всё равно означает успешный день. Формулируй привычку как желаемое состояние — например «Не курить» → Да.", hintBoolean: "Да означает успешный день, Нет — невыполнение.", hintTargetNegative: "Негативная привычка: чем фактическое значение меньше, тем лучше. Дневная цель = 100%; ниже цели даёт больше 100%, выше цели — меньше 100%.", hintTarget: "Вводишь фактическое значение — процент считается автоматически. Чем больше относительно цели, тем лучше; верхнего лимита нет.",
+      targetMustPositive: "Дневная цель должна быть больше 0", habitUpdated: "Привычка обновлена", habitCreated: "Привычка создана", deleteConfirm: "Удалить «{name}» и все заполненные дни?", habitDeleted: "Привычка удалена",
+      percentage: "Процент", actualResult: "Фактический результат", chooseYesNo: "Выбери Да или Нет", daySaved: "День сохранён", dayCleared: "День очищен", backupExported: "Резервная копия экспортирована", importConfirm: "Импорт заменит текущие данные L manager. Продолжить?", backupImported: "Резервная копия импортирована", importFailed: "Не удалось импортировать файл",
+      language: "Язык"
+    }
+  };
+
+  function getLanguage() {
+    return state?.settings?.language === "en" ? "en" : "ru";
+  }
+
+  function t(key, vars = {}) {
+    const language = getLanguage();
+    let text = I18N[language]?.[key] ?? I18N.en[key] ?? key;
+    Object.entries(vars).forEach(([name, value]) => { text = text.replaceAll(`{${name}}`, String(value)); });
+    return text;
+  }
+
+  function localeCode() { return getLanguage() === "ru" ? "ru-RU" : "en-US"; }
+  function formatMonth(date) { return new Intl.DateTimeFormat(localeCode(), { month: "long", year: "numeric" }).format(date); }
+  function formatDate(date) { return new Intl.DateTimeFormat(localeCode(), { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(date); }
+  function formatShortMonth(date) { return date.toLocaleDateString(localeCode(), { month: "short" }); }
+  function formatShortDate(date) { return date.toLocaleDateString(localeCode(), { month: "short", day: "numeric" }); }
+  function weekdays() { return getLanguage() === "ru" ? ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"] : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]; }
+  function dayWord(count) {
+    if (getLanguage() !== "ru") return count === 1 ? t("day") : t("days");
+    const mod10 = Math.abs(count) % 10;
+    const mod100 = Math.abs(count) % 100;
+    if (mod10 === 1 && mod100 !== 11) return "день";
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return "дня";
+    return "дней";
+  }
+  function selectedHabitsPhrase(count) {
+    if (getLanguage() !== "ru") return count === 1 ? t("habitSelected") : t("habitsSelected");
+    const mod10 = Math.abs(count) % 10;
+    const mod100 = Math.abs(count) % 100;
+    if (mod10 === 1 && mod100 !== 11) return "привычка выбрана";
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return "привычки выбраны";
+    return "привычек выбрано";
+  }
+
+  function trackedDaysPhrase(count) {
+    if (getLanguage() !== "ru") return count === 1 ? t("trackedDayThisMonth") : t("trackedDaysThisMonth");
+    const mod10 = Math.abs(count) % 10;
+    const mod100 = Math.abs(count) % 100;
+    if (mod10 === 1 && mod100 !== 11) return "заполненный день в этом месяце";
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return "заполненных дня в этом месяце";
+    return "заполненных дней в этом месяце";
+  }
 
   const state = loadState();
   let viewDate = startOfMonth(new Date());
@@ -23,6 +112,8 @@
     monthLabel: document.querySelector("#monthLabel"),
     monthSummary: document.querySelector("#monthSummary"),
     showPercentagesToggle: document.querySelector("#showPercentagesToggle"),
+    langRuBtn: document.querySelector("#langRuBtn"),
+    langEnBtn: document.querySelector("#langEnBtn"),
     prevMonthBtn: document.querySelector("#prevMonthBtn"),
     nextMonthBtn: document.querySelector("#nextMonthBtn"),
     monthButton: document.querySelector("#monthButton"),
@@ -91,7 +182,7 @@
       version: APP_VERSION,
       habits: [],
       entries: {},
-      settings: { showPercentages: true },
+      settings: { showPercentages: true, language: "ru" },
     };
   }
 
@@ -136,6 +227,7 @@
         entries,
         settings: {
           showPercentages: parsed.settings?.showPercentages !== false,
+          language: parsed.settings?.language === "en" ? "en" : "ru",
         },
       };
       if (migrated || parsed.version !== APP_VERSION) {
@@ -153,6 +245,25 @@
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }
 
+  function applyStaticTranslations() {
+    document.documentElement.lang = getLanguage();
+    document.querySelectorAll("[data-i18n]").forEach((element) => {
+      element.textContent = t(element.dataset.i18n);
+    });
+    document.querySelectorAll("[data-i18n-placeholder]").forEach((element) => {
+      element.placeholder = t(element.dataset.i18nPlaceholder);
+    });
+    document.querySelectorAll("[data-i18n-title]").forEach((element) => {
+      element.title = t(element.dataset.i18nTitle);
+    });
+    document.querySelectorAll("[data-i18n-aria-label]").forEach((element) => {
+      element.setAttribute("aria-label", t(element.dataset.i18nAriaLabel));
+    });
+    els.langRuBtn.classList.toggle("selected", getLanguage() === "ru");
+    els.langEnBtn.classList.toggle("selected", getLanguage() === "en");
+    document.querySelector(".language-switch")?.setAttribute("aria-label", t("language"));
+  }
+
   function bindEvents() {
     els.prevMonthBtn.addEventListener("click", () => changeMonth(-1));
     els.nextMonthBtn.addEventListener("click", () => changeMonth(1));
@@ -165,6 +276,14 @@
       state.settings.showPercentages = els.showPercentagesToggle.checked;
       saveState();
       render();
+    });
+    [els.langRuBtn, els.langEnBtn].forEach((button) => {
+      button.addEventListener("click", () => {
+        state.settings = state.settings || {};
+        state.settings.language = button.dataset.lang === "en" ? "en" : "ru";
+        saveState();
+        render();
+      });
     });
 
     els.addHabitBtn.addEventListener("click", () => openHabitModal());
@@ -248,9 +367,11 @@
   }
 
   function render() {
-    state.settings = state.settings || { showPercentages: true };
+    state.settings = state.settings || { showPercentages: true, language: "ru" };
+    if (state.settings.language !== "en" && state.settings.language !== "ru") state.settings.language = "ru";
+    applyStaticTranslations();
     els.showPercentagesToggle.checked = state.settings.showPercentages !== false;
-    els.monthLabel.textContent = MONTH_FORMAT.format(viewDate);
+    els.monthLabel.textContent = formatMonth(viewDate);
     els.emptyState.hidden = state.habits.length !== 0;
     els.habitList.hidden = state.habits.length === 0;
     els.insightsPanel.hidden = state.habits.length === 0;
@@ -263,9 +384,9 @@
       relationOverlayInitialized = false;
       els.habitList.innerHTML = "";
       els.monthSummary.innerHTML = `
-        <div class="summary-item"><span>habits</span><strong>0</strong></div>
-        <div class="summary-item"><span>tracked</span><strong>0</strong></div>
-        <div class="summary-item"><span>avg</span><strong>—</strong></div>`;
+        <div class="summary-item"><span>${t("habits")}</span><strong>0</strong></div>
+        <div class="summary-item"><span>${t("tracked")}</span><strong>0</strong></div>
+        <div class="summary-item"><span>${t("avg")}</span><strong>—</strong></div>`;
       return;
     }
 
@@ -298,23 +419,23 @@
     const stats = computeHabitStats(habit, monthEntries);
     const negativeHabit = Boolean(habit.negativeHabit);
     const meta = habit.trackingType === "percent"
-      ? "Manual percentage · no upper limit"
+      ? t("manualPercentageNoLimit")
       : habit.trackingType === "boolean"
         ? negativeHabit
-          ? `<span class="negative-target-badge">Negative habit</span> · Yes = success`
-          : `<span class="positive-target-badge">Positive habit</span> · Yes = success`
+          ? `<span class="negative-target-badge">${t("negativeHabit")}</span> · ${t("yesSuccess")}`
+          : `<span class="positive-target-badge">${t("positiveHabit")}</span> · ${t("yesSuccess")}`
         : negativeHabit
-          ? `<span class="negative-target-badge">Negative habit</span> · Lower is better · Target: ${formatNumber(habit.target)}${habit.unit ? ` ${escapeHtml(habit.unit)}` : ""} / day`
-          : `Target: ${formatNumber(habit.target)}${habit.unit ? ` ${escapeHtml(habit.unit)}` : ""} / day`;
+          ? `<span class="negative-target-badge">${t("negativeHabit")}</span> · ${t("lowerIsBetter")} · ${t("target")}: ${formatNumber(habit.target)}${habit.unit ? ` ${escapeHtml(habit.unit)}` : ""} ${t("perDay")}`
+          : `${t("target")}: ${formatNumber(habit.target)}${habit.unit ? ` ${escapeHtml(habit.unit)}` : ""} ${t("perDay")}`;
 
-    const weekdays = WEEKDAYS.map((day) => `<div class="weekday">${day}</div>`).join("");
+    const weekdayLabels = weekdays().map((day) => `<div class="weekday">${day}</div>`).join("");
     const cells = calendar.map((date) => renderDayCell(habit, date)).join("");
 
     return `
       <article class="habit-card" data-habit-card-id="${habit.id}" style="--habit-color: ${habit.color}">
         <header class="habit-header">
           <div class="habit-heading">
-            <button class="habit-title-row habit-view-button" type="button" data-view-habit="${habit.id}" title="Show visualization">
+            <button class="habit-title-row habit-view-button" type="button" data-view-habit="${habit.id}" title="${escapeHtml(t("showVisualization"))}">
               <span class="habit-color-dot"></span>
               <h2 class="habit-title">${escapeHtml(habit.name)}</h2>
             </button>
@@ -322,16 +443,16 @@
           </div>
           <div class="habit-actions">
             <div class="habit-kpis">
-              <div class="habit-kpi"><span>avg</span><strong>${stats.average == null ? "—" : `${formatPercent(stats.average)}%`}</strong></div>
-              <div class="habit-kpi"><span>${habit.trackingType === "boolean" ? "success" : "100%+"}</span><strong>${stats.hitTarget}</strong></div>
-              <div class="habit-kpi"><span>tracked</span><strong>${stats.tracked}</strong></div>
+              <div class="habit-kpi"><span>${t("avg")}</span><strong>${stats.average == null ? "—" : `${formatPercent(stats.average)}%`}</strong></div>
+              <div class="habit-kpi"><span>${habit.trackingType === "boolean" ? t("success") : "100%+"}</span><strong>${stats.hitTarget}</strong></div>
+              <div class="habit-kpi"><span>${t("tracked")}</span><strong>${stats.tracked}</strong></div>
             </div>
-            <button class="icon-button edit-habit" type="button" data-edit-habit="${habit.id}" aria-label="Edit ${escapeHtml(habit.name)}">•••</button>
+            <button class="icon-button edit-habit" type="button" data-edit-habit="${habit.id}" aria-label="${escapeHtml(t("editHabitAria", { name: habit.name }))}">•••</button>
           </div>
         </header>
         <div class="calendar-wrap">
           <div class="calendar">
-            ${weekdays}
+            ${weekdayLabels}
             ${cells}
           </div>
         </div>
@@ -351,22 +472,22 @@
 
     let style = "";
     let content = `<div class="day-top"><span class="day-number">${date.getDate()}</span></div>`;
-    let title = `${habit.name} · ${DATE_FORMAT.format(date)}`;
+    let title = `${habit.name} · ${formatDate(date)}`;
 
     if (entry) {
       const percent = getEntryPercent(habit, entry);
       const bg = colorForPercent(habit.color, percent);
       style = `--entry-bg:${bg};`;
       const valueText = habit.trackingType === "percent"
-        ? "manual"
+        ? t("manual")
         : habit.trackingType === "boolean"
-          ? (Number(entry.value) === 1 ? "Yes" : "No")
+          ? (Number(entry.value) === 1 ? t("yes") : t("no"))
           : `${formatNumber(entry.value)}${habit.unit ? ` ${escapeHtml(habit.unit)}` : ""}`;
-      const noteDot = entry.note ? `<span class="day-note-dot" title="Has note"></span>` : "";
+      const noteDot = entry.note ? `<span class="day-note-dot" title="${escapeHtml(t("hasNote"))}"></span>` : "";
       const showPercentages = state.settings?.showPercentages !== false;
       let detailContent = "";
       if (habit.trackingType === "boolean") {
-        detailContent = `<strong class="day-percent">${Number(entry.value) === 1 ? "YES" : "NO"}</strong>`;
+        detailContent = `<strong class="day-percent">${Number(entry.value) === 1 ? t("yes").toUpperCase() : t("no").toUpperCase()}</strong>`;
       } else if (habit.trackingType === "percent") {
         detailContent = showPercentages ? `<strong class="day-percent">${formatPercent(percent)}%</strong>` : "";
       } else {
@@ -376,7 +497,7 @@
         <div class="day-top"><span class="day-number">${date.getDate()}</span>${noteDot}</div>
         ${detailContent}`;
       title += habit.trackingType === "boolean"
-        ? ` · ${Number(entry.value) === 1 ? "Yes" : "No"}`
+        ? ` · ${Number(entry.value) === 1 ? t("yes") : t("no")}`
         : ` · ${formatPercent(percent)}%`;
       if (entry.note) title += ` · ${entry.note}`;
     }
@@ -412,14 +533,14 @@
     const monthEntries = getHabitMonthEntries(habit.id, viewDate);
     const stats = computeHabitStats(habit, monthEntries);
     const bestStreak = computeBestStreak(habit, viewDate);
-    const successLabel = habit.trackingType === "boolean" ? "success" : "100%+";
+    const successLabel = habit.trackingType === "boolean" ? t("success") : "100%+";
     els.insightKpis.innerHTML = `
-      <div class="insight-kpi"><span>avg</span><strong>${stats.average == null ? "—" : `${formatPercent(stats.average)}%`}</strong></div>
+      <div class="insight-kpi"><span>${t("avg")}</span><strong>${stats.average == null ? "—" : `${formatPercent(stats.average)}%`}</strong></div>
       <div class="insight-kpi"><span>${successLabel}</span><strong>${stats.hitTarget}</strong></div>
-      <div class="insight-kpi"><span>best streak</span><strong>${bestStreak}${bestStreak === 1 ? " day" : " days"}</strong></div>`;
+      <div class="insight-kpi"><span>${t("bestStreak")}</span><strong>${bestStreak} ${dayWord(bestStreak)}</strong></div>`;
 
     els.allHabitsHeatmap.innerHTML = renderAllHabitsHeatmap(viewDate);
-    els.trendCaption.textContent = `${MONTH_FORMAT.format(viewDate)} · target line at 100%`;
+    els.trendCaption.textContent = t("currentMonthTarget", { month: formatMonth(viewDate) });
     els.habitTrendChart.innerHTML = renderTrendChart(habit, viewDate);
     renderRelations();
     els.habitComparison.innerHTML = renderHabitComparison(viewDate);
@@ -473,15 +594,15 @@
     const dateLabels = visibleDays.map((day, index) => {
       const showMonth = index === 0 || day.getDate() === 1;
       const label = showMonth
-        ? `${day.toLocaleDateString("en", { month: "short" })} ${day.getDate()}`
+        ? `${formatShortMonth(day)} ${day.getDate()}`
         : String(day.getDate());
-      const tooltip = DATE_FORMAT.format(day);
+      const tooltip = formatDate(day);
       return `<span class="habit-matrix-date${day > today ? " is-future" : ""}" title="${escapeHtml(tooltip)}">${escapeHtml(label)}</span>`;
     }).join("");
 
     const firstVisible = visibleDays[0];
     const lastVisible = visibleDays[visibleDays.length - 1];
-    const rangeLabel = `${firstVisible.toLocaleDateString("en", { month: "short", day: "numeric" })} – ${lastVisible.toLocaleDateString("en", { month: "short", day: "numeric" })}`;
+    const rangeLabel = `${formatShortDate(firstVisible)} – ${formatShortDate(lastVisible)}`;
 
     const rows = state.habits.map((habit) => {
       const cells = [];
@@ -494,7 +615,7 @@
 
         if (!entry) {
           const future = day > today;
-          const tooltip = `${habit.name} · ${DATE_FORMAT.format(day)} · ${future ? "future" : "no data"}`;
+          const tooltip = `${habit.name} · ${formatDate(day)} · ${future ? t("future") : t("noData")}`;
           cells.push(`<span class="habit-matrix-cell is-empty${future ? " is-future" : ""}" title="${escapeHtml(tooltip)}" aria-label="${escapeHtml(tooltip)}"></span>`);
           continue;
         }
@@ -503,13 +624,13 @@
         const background = colorForPercent(habit.color, percent);
         let resultText;
         if (habit.trackingType === "boolean") {
-          resultText = Number(entry.value) === 1 ? "Yes" : "No";
+          resultText = Number(entry.value) === 1 ? t("yes") : t("no");
         } else if (habit.trackingType === "percent") {
           resultText = `${formatPercent(percent)}%`;
         } else {
           resultText = `${formatNumber(entry.value)}${habit.unit ? ` ${habit.unit}` : ""} · ${formatPercent(percent)}%`;
         }
-        const tooltip = `${habit.name} · ${DATE_FORMAT.format(day)} · ${resultText}`;
+        const tooltip = `${habit.name} · ${formatDate(day)} · ${resultText}`;
         cells.push(`<span class="habit-matrix-cell has-value" style="--matrix-cell-bg:${background}; --matrix-cell-color:${habit.color}" title="${escapeHtml(tooltip)}" aria-label="${escapeHtml(tooltip)}"></span>`);
       }
 
@@ -586,7 +707,7 @@
       if (value == null || !Number.isFinite(value)) return "";
       const x = xFor(index);
       const y = yFor(value);
-      return `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="3.25" fill="${habit.color}" stroke="#111319" stroke-width="1.6"><title>Day ${index + 1}: ${formatPercent(value)}%</title></circle>`;
+      return `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="3.25" fill="${habit.color}" stroke="#111319" stroke-width="1.6"><title>${t("day")} ${index + 1}: ${formatPercent(value)}%</title></circle>`;
     }).join("");
 
     const midDay = Math.ceil(days / 2);
@@ -596,11 +717,11 @@
     }).join("");
 
     const empty = trackedValues.length === 0
-      ? `<text x="${width / 2}" y="${height / 2}" text-anchor="middle" class="chart-empty-label">No tracked days yet</text>`
+      ? `<text x="${width / 2}" y="${height / 2}" text-anchor="middle" class="chart-empty-label">${t("noTrackedDays")}</text>`
       : "";
 
     return `
-      <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Daily percentage trend for ${escapeHtml(habit.name)}">
+      <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(t("dailyPercentageTrend", { name: habit.name }))}">
         ${grids}
         ${lines}
         ${points}
@@ -672,8 +793,8 @@
     if (overlayMode) {
       const selectedHabits = state.habits.filter((habit) => relationOverlayHabitIds.includes(habit.id));
       if (!selectedHabits.length) {
-        els.relationMeta.innerHTML = `<span class="relation-empty">Select at least one habit to draw the overlay.</span>`;
-        els.relationChart.innerHTML = `<div class="relation-empty-chart">No habits selected</div>`;
+        els.relationMeta.innerHTML = `<span class="relation-empty">${t("selectAtLeastOne")}</span>`;
+        els.relationChart.innerHTML = `<div class="relation-empty-chart">${t("noHabitsSelected")}</div>`;
         return;
       }
 
@@ -683,15 +804,15 @@
           ${selectedHabits.map((habit) => `<span><i style="--relation-color:${habit.color}"></i>${escapeHtml(habit.name)}</span>`).join("")}
         </div>
         <div class="relation-correlation relation-overlay-summary">
-          <span>overlay</span><strong>${selectedHabits.length}</strong><em>${selectedHabits.length === 1 ? 'habit selected' : 'habits selected'}</em><small>${trackedDays} tracked day${trackedDays === 1 ? '' : 's'} this month</small>
+          <span>${t("overlay")}</span><strong>${selectedHabits.length}</strong><em>${selectedHabitsPhrase(selectedHabits.length)}</em><small>${trackedDays} ${trackedDaysPhrase(trackedDays)}</small>
         </div>`;
       els.relationChart.innerHTML = renderRelationOverlayMulti(selectedHabits, viewDate);
       return;
     }
 
     if (state.habits.length < 2) {
-      els.relationMeta.innerHTML = `<span class="relation-empty">Add a second habit to compare relationships.</span>`;
-      els.relationChart.innerHTML = `<div class="relation-empty-chart">Two habits are needed</div>`;
+      els.relationMeta.innerHTML = `<span class="relation-empty">${t("addSecondHabit")}</span>`;
+      els.relationChart.innerHTML = `<div class="relation-empty-chart">${t("twoHabitsNeeded")}</div>`;
       return;
     }
 
@@ -705,8 +826,8 @@
         <span><i style="--relation-color:${habitA.color}"></i>${escapeHtml(habitA.name)}</span>
         <span><i style="--relation-color:${habitB.color}"></i>${escapeHtml(habitB.name)}</span>
       </div>
-      <div class="relation-correlation" title="Pearson correlation across days where both habits were tracked">
-        <span>r</span><strong>${correlationText}</strong><em>${escapeHtml(relationLabel)}</em><small>${paired.length} shared days</small>
+      <div class="relation-correlation" title="${escapeHtml(t("pearsonTitle"))}">
+        <span>r</span><strong>${correlationText}</strong><em>${escapeHtml(relationLabel)}</em><small>${paired.length} ${t("sharedDays")}</small>
       </div>`;
 
     els.relationChart.innerHTML = renderRelationScatter(habitA, habitB, paired);
@@ -745,17 +866,17 @@
   }
 
   function getRelationUnit(habit) {
-    if (habit.trackingType === "boolean") return "Yes/No";
+    if (habit.trackingType === "boolean") return t("yesNo");
     if (habit.trackingType === "percent") return "%";
-    return habit.unit || "value";
+    return habit.unit || t("value");
   }
 
   function describeCorrelation(value) {
-    if (!Number.isFinite(value)) return "not enough variation";
+    if (!Number.isFinite(value)) return t("notEnoughVariation");
     const magnitude = Math.abs(value);
-    const strength = magnitude >= 0.75 ? "strong" : magnitude >= 0.45 ? "moderate" : magnitude >= 0.2 ? "weak" : "little";
-    if (magnitude < 0.2) return `${strength} relation`;
-    return `${strength} ${value < 0 ? "inverse" : "positive"}`;
+    const strength = magnitude >= 0.75 ? t("strong") : magnitude >= 0.45 ? t("moderate") : magnitude >= 0.2 ? t("weak") : t("little");
+    if (magnitude < 0.2) return `${strength} ${t("relation")}`;
+    return `${strength} ${value < 0 ? t("inverse") : t("positive")}`;
   }
 
   function pearsonCorrelation(xs, ys) {
@@ -826,16 +947,16 @@
         ? `<polyline points="${segment.join(" ")}" fill="none" stroke="${habit.color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".92" />`
         : "").join("");
       const points = values.map((value, index) => value == null || !Number.isFinite(value) ? "" :
-        `<circle cx="${xFor(index).toFixed(2)}" cy="${yFor(value).toFixed(2)}" r="2.5" fill="${habit.color}" stroke="#111319" stroke-width="1.2"><title>${escapeHtml(habit.name)} · day ${index + 1}: ${formatPercent(value)}%</title></circle>`).join("");
+        `<circle cx="${xFor(index).toFixed(2)}" cy="${yFor(value).toFixed(2)}" r="2.5" fill="${habit.color}" stroke="#111319" stroke-width="1.2"><title>${escapeHtml(habit.name)} · ${t("day")} ${index + 1}: ${formatPercent(value)}%</title></circle>`).join("");
       return lines + points;
     }).join("");
 
     const midDay = Math.ceil(days / 2);
     const xLabels = [1, midDay, days].map((day) => `<text x="${xFor(day - 1).toFixed(2)}" y="${height - 6}" text-anchor="middle" class="chart-axis-label">${day}</text>`).join("");
-    const empty = finite.length === 0 ? `<text x="${width / 2}" y="${height / 2}" text-anchor="middle" class="chart-empty-label">No tracked data yet</text>` : "";
+    const empty = finite.length === 0 ? `<text x="${width / 2}" y="${height / 2}" text-anchor="middle" class="chart-empty-label">${t("noTrackedData")}</text>` : "";
 
-    return `<div class="relation-chart-caption">Overlay uses % of target so habits with different units share one scale.</div>
-      <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Overlay comparison of selected habits">
+    return `<div class="relation-chart-caption">${t("overlayCaption")}</div>
+      <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(t("overlayAria"))}">
         ${grids}${paths}${xLabels}${empty}
       </svg>`;
   }
@@ -845,7 +966,7 @@
     const height = 220;
     const pad = { left: 42, right: 18, top: 16, bottom: 36 };
     if (!paired.length) {
-      return `<div class="relation-chart-caption">Scatter uses actual values from days where both habits were tracked.</div><div class="relation-empty-chart">No shared tracked days this month</div>`;
+      return `<div class="relation-chart-caption">${t("scatterCaption")}</div><div class="relation-empty-chart">${t("noSharedDays")}</div>`;
     }
 
     const xs = paired.map((item) => item.rawA);
@@ -875,7 +996,7 @@
     const dots = paired.map((item) => {
       const labelA = formatRelationRaw(habitA, item.rawA);
       const labelB = formatRelationRaw(habitB, item.rawB);
-      return `<circle cx="${xFor(item.rawA).toFixed(2)}" cy="${yFor(item.rawB).toFixed(2)}" r="4" fill="${habitB.color}" stroke="${habitA.color}" stroke-width="1.8" opacity=".92"><title>Day ${item.day} · ${escapeHtml(habitA.name)}: ${escapeHtml(labelA)} · ${escapeHtml(habitB.name)}: ${escapeHtml(labelB)}</title></circle>`;
+      return `<circle cx="${xFor(item.rawA).toFixed(2)}" cy="${yFor(item.rawB).toFixed(2)}" r="4" fill="${habitB.color}" stroke="${habitA.color}" stroke-width="1.8" opacity=".92"><title>${t("day")} ${item.day} · ${escapeHtml(habitA.name)}: ${escapeHtml(labelA)} · ${escapeHtml(habitB.name)}: ${escapeHtml(labelB)}</title></circle>`;
     }).join("");
 
     let regression = "";
@@ -894,8 +1015,8 @@
       }
     }
 
-    return `<div class="relation-chart-caption">Each dot is one day · actual values · trend line shows direction, not causation.</div>
-      <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Scatter plot comparing ${escapeHtml(habitA.name)} and ${escapeHtml(habitB.name)}">
+    return `<div class="relation-chart-caption">${t("eachDotCaption")}</div>
+      <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(t("scatterAria", { a: habitA.name, b: habitB.name }))}">
         ${grid}${regression}${dots}
         <text x="${pad.left + innerW / 2}" y="${height - 7}" text-anchor="middle" class="relation-axis-title">${escapeHtml(habitA.name)} · ${escapeHtml(getRelationUnit(habitA))}</text>
         <text x="11" y="${pad.top + innerH / 2}" text-anchor="middle" class="relation-axis-title" transform="rotate(-90 11 ${pad.top + innerH / 2})">${escapeHtml(habitB.name)} · ${escapeHtml(getRelationUnit(habitB))}</text>
@@ -903,7 +1024,7 @@
   }
 
   function formatRelationRaw(habit, value) {
-    if (habit.trackingType === "boolean") return value === 1 ? "Yes" : "No";
+    if (habit.trackingType === "boolean") return value === 1 ? t("yes") : t("no");
     if (habit.trackingType === "percent") return `${formatPercent(value)}%`;
     return `${formatNumber(value)}${habit.unit ? ` ${habit.unit}` : ""}`;
   }
@@ -932,7 +1053,7 @@
           <span class="comparison-name"><i style="--comparison-color:${habit.color}"></i>${escapeHtml(habit.name)}</span>
           <span class="comparison-value">${average == null ? "—" : `${formatPercent(average)}%`}</span>
           <span class="comparison-track"><span style="width:${width.toFixed(2)}%; background:${habit.color}"></span></span>
-          <span class="comparison-meta">${tracked} tracked</span>
+          <span class="comparison-meta">${tracked} ${t("tracked")}</span>
         </button>`;
     }).join("");
   }
@@ -968,10 +1089,10 @@
     const targetHits = percentages.filter((value) => value >= 100).length;
 
     els.monthSummary.innerHTML = `
-      <div class="summary-item"><span>habits</span><strong>${state.habits.length}</strong></div>
-      <div class="summary-item"><span>tracked</span><strong>${entries.length}</strong></div>
+      <div class="summary-item"><span>${t("habits")}</span><strong>${state.habits.length}</strong></div>
+      <div class="summary-item"><span>${t("tracked")}</span><strong>${entries.length}</strong></div>
       <div class="summary-item"><span>100%+</span><strong>${targetHits}</strong></div>
-      <div class="summary-item"><span>avg</span><strong>${avg == null ? "—" : `${formatPercent(avg)}%`}</strong></div>`;
+      <div class="summary-item"><span>${t("avg")}</span><strong>${avg == null ? "—" : `${formatPercent(avg)}%`}</strong></div>`;
   }
 
   function changeMonth(offset) {
@@ -983,7 +1104,7 @@
     const habit = state.habits.find((item) => item.id === habitId);
     els.habitForm.reset();
     els.habitId.value = habit?.id || "";
-    els.habitModalTitle.textContent = habit ? "Edit habit" : "New habit";
+    els.habitModalTitle.textContent = habit ? t("editHabit") : t("newHabit");
     els.deleteHabitBtn.hidden = !habit;
 
     els.habitName.value = habit?.name || "";
@@ -1016,15 +1137,13 @@
     if (isPercent) els.habitNegative.checked = false;
 
     if (isPercent) {
-      els.trackingHint.textContent = "Вводишь процент напрямую. Можно записать 0%, 124%, 500% или любое другое неотрицательное значение.";
+      els.trackingHint.textContent = t("hintPercent");
     } else if (isBoolean) {
-      els.trackingHint.textContent = isNegative
-        ? "Negative habit: Yes всё равно означает успешный день. Формулируй привычку как желаемое состояние — например «Не курить» → Yes."
-        : "Yes означает успешный день, No — невыполнение.";
+      els.trackingHint.textContent = isNegative ? t("hintBooleanNegative") : t("hintBoolean");
     } else if (isNegative) {
-      els.trackingHint.textContent = "Negative habit: чем фактическое значение меньше, тем лучше. Daily target = 100%; ниже target даёт больше 100%, выше target — меньше 100%.";
+      els.trackingHint.textContent = t("hintTargetNegative");
     } else {
-      els.trackingHint.textContent = "Вводишь фактическое значение — процент считается автоматически. Чем больше относительно target, тем лучше; верхнего лимита нет.";
+      els.trackingHint.textContent = t("hintTarget");
     }
   }
 
@@ -1037,7 +1156,7 @@
 
     if (!els.habitName.value.trim()) return;
     if (trackingType === "target" && (!Number.isFinite(target) || target <= 0)) {
-      showToast("Daily target must be greater than 0");
+      showToast(t("targetMustPositive"));
       return;
     }
 
@@ -1059,14 +1178,14 @@
     saveState();
     closeModal(els.habitModal);
     render();
-    showToast(index >= 0 ? "Habit updated" : "Habit created");
+    showToast(index >= 0 ? t("habitUpdated") : t("habitCreated"));
   }
 
   function deleteCurrentHabit() {
     const id = els.habitId.value;
     const habit = state.habits.find((item) => item.id === id);
     if (!habit) return;
-    if (!window.confirm(`Delete “${habit.name}” and all its tracked days?`)) return;
+    if (!window.confirm(t("deleteConfirm", { name: habit.name }))) return;
 
     state.habits = state.habits.filter((item) => item.id !== id);
     for (const key of Object.keys(state.entries)) {
@@ -1075,7 +1194,7 @@
     saveState();
     closeModal(els.habitModal);
     render();
-    showToast("Habit deleted");
+    showToast(t("habitDeleted"));
   }
 
   function openEntryModal(habitId, dateKey) {
@@ -1086,7 +1205,7 @@
     const date = fromDateKey(dateKey);
     els.entryHabitId.value = habitId;
     els.entryDate.value = dateKey;
-    els.entryDateLabel.textContent = DATE_FORMAT.format(date);
+    els.entryDateLabel.textContent = formatDate(date);
     els.entryModalTitle.textContent = habit.name;
     els.entryValue.value = habit.trackingType === "boolean" ? "" : (entry?.value ?? "");
     els.entryNote.value = entry?.note || "";
@@ -1096,11 +1215,11 @@
     syncBooleanButtons();
 
     if (habit.trackingType === "percent") {
-      els.entryValueLabel.textContent = "Percentage";
+      els.entryValueLabel.textContent = t("percentage");
       els.entryUnitBadge.textContent = "%";
       els.entryValue.placeholder = "100";
     } else if (habit.trackingType === "target") {
-      els.entryValueLabel.textContent = "Actual result";
+      els.entryValueLabel.textContent = t("actualResult");
       els.entryUnitBadge.textContent = habit.unit || "";
       els.entryValue.placeholder = String(habit.target);
     }
@@ -1151,7 +1270,7 @@
       }
       const value = Number(selected);
       const success = value === 1;
-      els.entryPercentPreview.textContent = `${value === 1 ? "Yes" : "No"} · ${success ? "100%" : "0%"}`;
+      els.entryPercentPreview.textContent = `${value === 1 ? t("yes") : t("no")} · ${success ? "100%" : "0%"}`;
       return;
     }
     const value = Number(els.entryValue.value);
@@ -1173,7 +1292,7 @@
     let value;
     if (habit.trackingType === "boolean") {
       if (els.booleanEntry.dataset.value !== "1" && els.booleanEntry.dataset.value !== "0") {
-        showToast("Choose Yes or No");
+        showToast(t("chooseYesNo"));
         return;
       }
       value = Number(els.booleanEntry.dataset.value);
@@ -1190,7 +1309,7 @@
     saveState();
     closeModal(els.entryModal);
     render();
-    showToast("Day saved");
+    showToast(t("daySaved"));
   }
 
   function clearCurrentEntry() {
@@ -1200,7 +1319,7 @@
     saveState();
     closeModal(els.entryModal);
     render();
-    showToast("Day cleared");
+    showToast(t("dayCleared"));
   }
 
   function getEntryPercent(habit, entry) {
@@ -1304,7 +1423,7 @@
     anchor.click();
     anchor.remove();
     URL.revokeObjectURL(url);
-    showToast("Backup exported");
+    showToast(t("backupExported"));
   }
 
   async function importData(event) {
@@ -1317,22 +1436,23 @@
       const parsed = JSON.parse(text);
       const incoming = parsed.data || parsed;
       if (!incoming || !Array.isArray(incoming.habits) || typeof incoming.entries !== "object") throw new Error("Invalid backup");
-      if (!window.confirm("Import will replace current L manager data. Continue?")) return;
+      if (!window.confirm(t("importConfirm"))) return;
 
       state.habits = incoming.habits;
       state.entries = incoming.entries || {};
       state.settings = {
         showPercentages: incoming.settings?.showPercentages !== false,
+        language: incoming.settings?.language === "en" ? "en" : getLanguage(),
       };
       relationOverlayHabitIds = [];
       relationOverlayInitialized = false;
       state.version = APP_VERSION;
       saveState();
       render();
-      showToast("Backup imported");
+      showToast(t("backupImported"));
     } catch (error) {
       console.error(error);
-      showToast("Could not import this file");
+      showToast(t("importFailed"));
     }
   }
 
@@ -1395,13 +1515,13 @@
   }
 
   function formatNumber(value) {
-    return new Intl.NumberFormat("en", { maximumFractionDigits: 2 }).format(value);
+    return new Intl.NumberFormat(localeCode(), { maximumFractionDigits: 2 }).format(value);
   }
 
   function formatPercent(value) {
     if (!Number.isFinite(value)) return "0";
     const isInteger = Math.abs(value - Math.round(value)) < 0.000001;
-    return new Intl.NumberFormat("en", {
+    return new Intl.NumberFormat(localeCode(), {
       minimumFractionDigits: 0,
       maximumFractionDigits: isInteger ? 0 : 1,
     }).format(value);

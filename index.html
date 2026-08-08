@@ -14,32 +14,36 @@
         <div class="brand-mark">L</div>
         <div>
           <h1>L manager</h1>
-          <p>habit tracker</p>
+          <p data-i18n="habitTracker">habit tracker</p>
         </div>
       </div>
 
       <div class="topbar-actions">
-        <button class="button button-ghost" id="exportBtn" type="button">Export</button>
-        <label class="button button-ghost file-button" for="importInput">Import</label>
+        <div class="language-switch" role="group" aria-label="Language">
+          <button class="language-button" id="langRuBtn" type="button" data-lang="ru">RU</button>
+          <button class="language-button" id="langEnBtn" type="button" data-lang="en">EN</button>
+        </div>
+        <button class="button button-ghost" id="exportBtn" type="button" data-i18n="export">Export</button>
+        <label class="button button-ghost file-button" for="importInput" data-i18n="import">Import</label>
         <input id="importInput" type="file" accept="application/json,.json" hidden />
-        <button class="button button-primary" id="addHabitBtn" type="button">+ Habit</button>
+        <button class="button button-primary" id="addHabitBtn" type="button" data-i18n="addHabit">+ Habit</button>
       </div>
     </header>
 
     <main>
       <section class="month-toolbar panel">
         <div class="month-nav">
-          <button class="icon-button" id="prevMonthBtn" aria-label="Previous month">←</button>
+          <button class="icon-button" id="prevMonthBtn" data-i18n-aria-label="previousMonth" aria-label="Previous month">←</button>
           <button class="month-button" id="monthButton" type="button">
             <span id="monthLabel"></span>
-            <span class="month-button-caption">today</span>
+            <span class="month-button-caption" data-i18n="today">today</span>
           </button>
-          <button class="icon-button" id="nextMonthBtn" aria-label="Next month">→</button>
+          <button class="icon-button" id="nextMonthBtn" data-i18n-aria-label="nextMonth" aria-label="Next month">→</button>
         </div>
 
         <div class="month-toolbar-right">
-          <label class="display-toggle" title="When off, tracked days are shown by shade only">
-            <span>Показать проценты</span>
+          <label class="display-toggle" data-i18n-title="showPercentagesTitle" title="When off, tracked days are shown by shade only">
+            <span data-i18n="showPercentages">Показать проценты</span>
             <input id="showPercentagesToggle" type="checkbox" checked />
             <span class="toggle-switch display-toggle-switch" aria-hidden="true"></span>
           </label>
@@ -58,34 +62,34 @@
               <div class="empty-dot dot-c"></div>
               <div class="empty-core">L</div>
             </div>
-            <h2>No habits yet</h2>
-            <p>Добавь первую привычку. Цель задаётся числом, а L manager сам считает процент — хоть 12%, хоть 124%, хоть 500%.</p>
-            <button class="button button-primary" id="emptyAddHabitBtn" type="button">Create first habit</button>
+            <h2 data-i18n="noHabitsYet">No habits yet</h2>
+            <p data-i18n="emptyDescription">Добавь первую привычку. Цель задаётся числом, а L manager сам считает процент — хоть 12%, хоть 124%, хоть 500%.</p>
+            <button class="button button-primary" id="emptyAddHabitBtn" type="button" data-i18n="createFirstHabit">Create first habit</button>
           </section>
         </div>
 
-        <aside id="insightsPanel" class="insights-panel panel" hidden aria-label="Habit visualization">
+        <aside id="insightsPanel" class="insights-panel panel" hidden data-i18n-aria-label="habitVisualization" aria-label="Habit visualization">
           <div class="insights-header">
             <div>
-              <span class="eyebrow">Visualization</span>
-              <h2>Habit overview</h2>
+              <span class="eyebrow" data-i18n="visualization">Visualization</span>
+              <h2 data-i18n="habitOverview">Habit overview</h2>
             </div>
           </div>
 
           <section class="all-habits-heatmap-block">
             <div class="insight-section-heading">
               <div>
-                <h3>Habit history</h3>
-                <p>One row per habit · dated daily history</p>
+                <h3 data-i18n="habitHistory">Habit history</h3>
+                <p data-i18n="habitHistoryDescription">One row per habit · dated daily history</p>
               </div>
             </div>
             <div class="habit-matrix-scroll">
-              <div id="allHabitsHeatmap" class="habit-matrix" aria-label="Habit history matrix"></div>
+              <div id="allHabitsHeatmap" class="habit-matrix" data-i18n-aria-label="habitHistoryMatrix" aria-label="Habit history matrix"></div>
             </div>
           </section>
 
           <label class="insight-select-field">
-            <span>Habit</span>
+            <span data-i18n="habit">Habit</span>
             <select id="visualHabitSelect"></select>
           </label>
 
@@ -94,7 +98,7 @@
           <section class="insight-section">
             <div class="insight-section-heading">
               <div>
-                <h3>Daily progress</h3>
+                <h3 data-i18n="dailyProgress">Daily progress</h3>
                 <p id="trendCaption">Current month · target line at 100%</p>
               </div>
             </div>
@@ -104,8 +108,8 @@
           <section class="insight-section relation-section">
             <div class="insight-section-heading">
               <div>
-                <h3>Relations</h3>
-                <p>Overlay many habits or compare two on the same days</p>
+                <h3 data-i18n="relations">Relations</h3>
+                <p data-i18n="relationsDescription">Overlay many habits or compare two on the same days</p>
               </div>
             </div>
 
@@ -122,15 +126,15 @@
 
             <div id="relationOverlayControls" class="relation-overlay-controls" hidden>
               <div class="relation-overlay-heading">
-                <strong>Overlay habits</strong>
-                <small>Select as many habits as you want</small>
+                <strong data-i18n="overlayHabits">Overlay habits</strong>
+                <small data-i18n="selectManyHabits">Select as many habits as you want</small>
               </div>
               <div id="relationOverlayList" class="relation-overlay-list"></div>
             </div>
 
-            <div class="relation-mode-switch" role="group" aria-label="Relation visualization mode">
-              <button class="relation-mode-button selected" id="relationOverlayBtn" type="button" data-relation-mode="overlay">Overlay</button>
-              <button class="relation-mode-button" id="relationScatterBtn" type="button" data-relation-mode="scatter">Scatter</button>
+            <div class="relation-mode-switch" role="group" data-i18n-aria-label="relationVisualizationMode" aria-label="Relation visualization mode">
+              <button class="relation-mode-button selected" id="relationOverlayBtn" type="button" data-relation-mode="overlay" data-i18n="overlay">Overlay</button>
+              <button class="relation-mode-button" id="relationScatterBtn" type="button" data-relation-mode="scatter" data-i18n="scatter">Scatter</button>
             </div>
 
             <div id="relationMeta" class="relation-meta"></div>
@@ -140,8 +144,8 @@
           <section class="insight-section">
             <div class="insight-section-heading">
               <div>
-                <h3>Habits this month</h3>
-                <p>Average result for tracked days</p>
+                <h3 data-i18n="habitsThisMonth">Habits this month</h3>
+                <p data-i18n="averageTrackedDays">Average result for tracked days</p>
               </div>
             </div>
             <div id="habitComparison" class="habit-comparison"></div>
@@ -155,41 +159,41 @@
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="habitModalTitle">
       <div class="modal-header">
         <div>
-          <span class="eyebrow">Habit</span>
+          <span class="eyebrow" data-i18n="habit">Habit</span>
           <h2 id="habitModalTitle">New habit</h2>
         </div>
-        <button class="icon-button modal-close" data-close-modal="habitModal" aria-label="Close">×</button>
+        <button class="icon-button modal-close" data-close-modal="habitModal" data-i18n-aria-label="close" aria-label="Close">×</button>
       </div>
 
       <form id="habitForm" class="form-grid">
         <input id="habitId" type="hidden" />
 
         <label class="field field-span-2">
-          <span>Name</span>
-          <input id="habitName" type="text" maxlength="80" placeholder="Например: Читать" autocomplete="off" required />
+          <span data-i18n="name">Name</span>
+          <input id="habitName" type="text" maxlength="80" data-i18n-placeholder="habitNamePlaceholder" placeholder="Например: Читать" autocomplete="off" required />
         </label>
 
         <label class="field">
-          <span>Tracking</span>
+          <span data-i18n="tracking">Tracking</span>
           <select id="habitTrackingType">
-            <option value="target">Target value</option>
-            <option value="percent">Manual percent</option>
-            <option value="boolean">Yes / No</option>
+            <option value="target" data-i18n="targetValue">Target value</option>
+            <option value="percent" data-i18n="manualPercent">Manual percent</option>
+            <option value="boolean" data-i18n="yesNo">Yes / No</option>
           </select>
         </label>
 
         <label class="field" id="targetValueField">
-          <span>Daily target</span>
+          <span data-i18n="dailyTarget">Daily target</span>
           <input id="habitTarget" type="number" min="0.000001" step="any" value="1" required />
         </label>
 
         <label class="field" id="unitField">
-          <span>Unit</span>
-          <input id="habitUnit" type="text" maxlength="24" placeholder="min, pages, km…" autocomplete="off" />
+          <span data-i18n="unit">Unit</span>
+          <input id="habitUnit" type="text" maxlength="24" data-i18n-placeholder="unitPlaceholder" placeholder="min, pages, km…" autocomplete="off" />
         </label>
 
         <div class="field color-field">
-          <span>Color</span>
+          <span data-i18n="color">Color</span>
           <div class="color-picker-row">
             <input id="habitColor" type="color" value="#7C5CFC" />
             <input id="habitColorText" type="text" value="#7C5CFC" maxlength="7" spellcheck="false" />
@@ -197,22 +201,20 @@
         </div>
         <label class="negative-habit-toggle" id="negativeHabitField">
           <span class="negative-habit-copy">
-            <strong>Negative habit</strong>
-            <small>For numbers, lower is better. Yes / No still aims for Yes.</small>
+            <strong data-i18n="negativeHabit">Negative habit</strong>
+            <small data-i18n="negativeHabitDescription">For numbers, lower is better. Yes / No still aims for Yes.</small>
           </span>
           <input id="habitNegative" type="checkbox" />
           <span class="toggle-switch" aria-hidden="true"></span>
         </label>
 
 
-        <div class="form-hint field-span-2" id="trackingHint">
-          Вводишь фактическое значение — процент считается автоматически. Верхнего лимита нет.
-        </div>
+        <div class="form-hint field-span-2" id="trackingHint"></div>
 
         <div class="modal-actions field-span-2">
-          <button class="button button-danger button-left" id="deleteHabitBtn" type="button" hidden>Delete</button>
-          <button class="button button-ghost" type="button" data-close-modal="habitModal">Cancel</button>
-          <button class="button button-primary" type="submit">Save habit</button>
+          <button class="button button-danger button-left" id="deleteHabitBtn" type="button" hidden data-i18n="delete">Delete</button>
+          <button class="button button-ghost" type="button" data-close-modal="habitModal" data-i18n="cancel">Cancel</button>
+          <button class="button button-primary" type="submit" data-i18n="saveHabit">Save habit</button>
         </div>
       </form>
     </div>
@@ -223,9 +225,9 @@
       <div class="modal-header">
         <div>
           <span class="eyebrow" id="entryDateLabel"></span>
-          <h2 id="entryModalTitle">Update day</h2>
+          <h2 id="entryModalTitle" data-i18n="updateDay">Update day</h2>
         </div>
-        <button class="icon-button modal-close" data-close-modal="entryModal" aria-label="Close">×</button>
+        <button class="icon-button modal-close" data-close-modal="entryModal" data-i18n-aria-label="close" aria-label="Close">×</button>
       </div>
 
       <form id="entryForm" class="form-grid">
@@ -241,24 +243,24 @@
         </label>
 
         <div class="boolean-entry field-span-2" id="booleanEntry" hidden>
-          <button class="boolean-choice" id="entryYesBtn" type="button" data-boolean-value="1">Yes</button>
-          <button class="boolean-choice" id="entryNoBtn" type="button" data-boolean-value="0">No</button>
+          <button class="boolean-choice" id="entryYesBtn" type="button" data-boolean-value="1" data-i18n="yes">Yes</button>
+          <button class="boolean-choice" id="entryNoBtn" type="button" data-boolean-value="0" data-i18n="no">No</button>
         </div>
 
         <div class="entry-percent-preview field-span-2">
-          <span>Result</span>
+          <span data-i18n="result">Result</span>
           <strong id="entryPercentPreview">—</strong>
         </div>
 
         <label class="field field-span-2">
-          <span>Note <em>optional</em></span>
-          <textarea id="entryNote" rows="3" maxlength="220" placeholder="Контекст дня, если нужен…"></textarea>
+          <span><span data-i18n="note">Note</span> <em data-i18n="optional">optional</em></span>
+          <textarea id="entryNote" rows="3" maxlength="220" data-i18n-placeholder="notePlaceholder" placeholder="Контекст дня, если нужен…"></textarea>
         </label>
 
         <div class="modal-actions field-span-2">
-          <button class="button button-danger button-left" id="clearEntryBtn" type="button">Clear day</button>
-          <button class="button button-ghost" type="button" data-close-modal="entryModal">Cancel</button>
-          <button class="button button-primary" type="submit">Save day</button>
+          <button class="button button-danger button-left" id="clearEntryBtn" type="button" data-i18n="clearDay">Clear day</button>
+          <button class="button button-ghost" type="button" data-close-modal="entryModal" data-i18n="cancel">Cancel</button>
+          <button class="button button-primary" type="submit" data-i18n="saveDay">Save day</button>
         </div>
       </form>
     </div>
