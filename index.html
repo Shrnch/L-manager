@@ -194,9 +194,27 @@
 
         <div class="field color-field">
           <span data-i18n="color">Color</span>
-          <div class="color-picker-row">
-            <input id="habitColor" type="color" value="#7C5CFC" />
-            <input id="habitColorText" type="text" value="#7C5CFC" maxlength="7" spellcheck="false" />
+          <div class="color-picker-panel">
+            <label class="color-swatch-picker" data-i18n-title="chooseColor" title="Choose color">
+              <input id="habitColor" type="color" value="#7C5CFC" data-i18n-aria-label="chooseColor" aria-label="Choose color" />
+              <span id="habitColorPreview" class="color-swatch-preview" style="--preview-color:#7C5CFC"></span>
+            </label>
+            <label class="color-hex-field">
+              <span>HEX</span>
+              <input id="habitColorText" type="text" value="#7C5CFC" maxlength="7" spellcheck="false" autocomplete="off" inputmode="text" placeholder="#7C5CFC" />
+            </label>
+          </div>
+          <div id="habitColorPresets" class="color-presets" data-i18n-aria-label="quickColors" aria-label="Quick colors">
+            <button type="button" class="color-preset" data-color="#7C5CFC" style="--preset-color:#7C5CFC" aria-label="#7C5CFC"></button>
+            <button type="button" class="color-preset" data-color="#4F8CFF" style="--preset-color:#4F8CFF" aria-label="#4F8CFF"></button>
+            <button type="button" class="color-preset" data-color="#2EC4B6" style="--preset-color:#2EC4B6" aria-label="#2EC4B6"></button>
+            <button type="button" class="color-preset" data-color="#39C96B" style="--preset-color:#39C96B" aria-label="#39C96B"></button>
+            <button type="button" class="color-preset" data-color="#F2C94C" style="--preset-color:#F2C94C" aria-label="#F2C94C"></button>
+            <button type="button" class="color-preset" data-color="#FF9F43" style="--preset-color:#FF9F43" aria-label="#FF9F43"></button>
+            <button type="button" class="color-preset" data-color="#FF5D73" style="--preset-color:#FF5D73" aria-label="#FF5D73"></button>
+            <button type="button" class="color-preset" data-color="#E056FD" style="--preset-color:#E056FD" aria-label="#E056FD"></button>
+            <button type="button" class="color-preset" data-color="#A0AEC0" style="--preset-color:#A0AEC0" aria-label="#A0AEC0"></button>
+            <button type="button" class="color-preset" data-color="#FFFFFF" style="--preset-color:#FFFFFF" aria-label="#FFFFFF"></button>
           </div>
         </div>
         <label class="negative-habit-toggle" id="negativeHabitField">

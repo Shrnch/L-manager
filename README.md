@@ -1,12 +1,14 @@
-# L manager v0.3.9
+# L manager v0.4.0
 
 Local-first habit tracker built with plain HTML, CSS and JavaScript.
 
-## v0.3.9
-- Added a global RU / EN interface switch.
-- The selected language is saved in localStorage and included in JSON backups.
-- Static UI, modals, statistics, Relations, tooltips, dates and generated labels now follow the selected language.
-- User-created habit names and units are left unchanged.
+## v0.4.0
+- Reworked habit color selection into a larger, clearer color picker.
+- Added direct HEX entry with live preview (`#7C5CFC`, `7C5CFC`, and short `#ABC` formats are accepted).
+- Added a quick preset palette for common colors.
+- Native color picker, HEX field, preview, and presets stay synchronized.
+- Selected preset is highlighted and invalid HEX input is visibly marked.
+- Existing habit colors and saved data remain compatible.
 
 ## Run
 Open `index.html` directly or run `start.bat` on Windows.

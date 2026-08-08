@@ -2,7 +2,7 @@
   "use strict";
 
   const STORAGE_KEY = "l-manager:data:v1";
-  const APP_VERSION = "0.3.9";
+  const APP_VERSION = "0.4.0";
 
   const I18N = {
     en: {
@@ -26,7 +26,7 @@
       newHabit: "New habit", editHabit: "Edit habit", hintPercent: "Enter the percentage directly. You can record 0%, 124%, 500%, or any other non-negative value.", hintBooleanNegative: "Negative habit: Yes still means a successful day. Phrase the habit as the desired state — for example “Do not smoke” → Yes.", hintBoolean: "Yes means a successful day; No means not completed.", hintTargetNegative: "Negative habit: the lower the actual value, the better. Daily target = 100%; below target gives more than 100%, above target gives less than 100%.", hintTarget: "Enter the actual value and the percentage is calculated automatically. The higher relative to target, the better; there is no upper limit.",
       targetMustPositive: "Daily target must be greater than 0", habitUpdated: "Habit updated", habitCreated: "Habit created", deleteConfirm: "Delete “{name}” and all its tracked days?", habitDeleted: "Habit deleted",
       percentage: "Percentage", actualResult: "Actual result", chooseYesNo: "Choose Yes or No", daySaved: "Day saved", dayCleared: "Day cleared", backupExported: "Backup exported", importConfirm: "Import will replace current L manager data. Continue?", backupImported: "Backup imported", importFailed: "Could not import this file",
-      language: "Language"
+      language: "Language", chooseColor: "Choose color", quickColors: "Quick colors"
     },
     ru: {
       habitTracker: "трекер привычек", updateDay: "Обновить день", export: "Экспорт", import: "Импорт", addHabit: "+ Привычка", previousMonth: "Предыдущий месяц", nextMonth: "Следующий месяц", today: "сегодня",
@@ -49,7 +49,7 @@
       newHabit: "Новая привычка", editHabit: "Редактировать привычку", hintPercent: "Вводишь процент напрямую. Можно записать 0%, 124%, 500% или любое другое неотрицательное значение.", hintBooleanNegative: "Негативная привычка: Да всё равно означает успешный день. Формулируй привычку как желаемое состояние — например «Не курить» → Да.", hintBoolean: "Да означает успешный день, Нет — невыполнение.", hintTargetNegative: "Негативная привычка: чем фактическое значение меньше, тем лучше. Дневная цель = 100%; ниже цели даёт больше 100%, выше цели — меньше 100%.", hintTarget: "Вводишь фактическое значение — процент считается автоматически. Чем больше относительно цели, тем лучше; верхнего лимита нет.",
       targetMustPositive: "Дневная цель должна быть больше 0", habitUpdated: "Привычка обновлена", habitCreated: "Привычка создана", deleteConfirm: "Удалить «{name}» и все заполненные дни?", habitDeleted: "Привычка удалена",
       percentage: "Процент", actualResult: "Фактический результат", chooseYesNo: "Выбери Да или Нет", daySaved: "День сохранён", dayCleared: "День очищен", backupExported: "Резервная копия экспортирована", importConfirm: "Импорт заменит текущие данные L manager. Продолжить?", backupImported: "Резервная копия импортирована", importFailed: "Не удалось импортировать файл",
-      language: "Язык"
+      language: "Язык", chooseColor: "Выбрать цвет", quickColors: "Быстрые цвета"
     }
   };
 
@@ -150,6 +150,8 @@
     habitUnit: document.querySelector("#habitUnit"),
     habitColor: document.querySelector("#habitColor"),
     habitColorText: document.querySelector("#habitColorText"),
+    habitColorPreview: document.querySelector("#habitColorPreview"),
+    habitColorPresets: document.querySelector("#habitColorPresets"),
     targetValueField: document.querySelector("#targetValueField"),
     unitField: document.querySelector("#unitField"),
     trackingHint: document.querySelector("#trackingHint"),
@@ -310,11 +312,22 @@
     els.habitTarget.addEventListener("input", syncTrackingFields);
     els.habitNegative.addEventListener("change", syncTrackingFields);
     els.habitColor.addEventListener("input", () => {
-      els.habitColorText.value = els.habitColor.value.toUpperCase();
+      applyHabitColor(els.habitColor.value, { updateText: true });
     });
     els.habitColorText.addEventListener("input", () => {
       const color = normalizeHex(els.habitColorText.value);
-      if (color) els.habitColor.value = color;
+      els.habitColorText.closest(".color-hex-field")?.classList.toggle("invalid", Boolean(els.habitColorText.value.trim()) && !color);
+      if (color) applyHabitColor(color, { updateText: false });
+    });
+    els.habitColorText.addEventListener("blur", () => {
+      const color = normalizeHex(els.habitColorText.value);
+      if (color) applyHabitColor(color, { updateText: true });
+      else applyHabitColor(els.habitColor.value, { updateText: true });
+    });
+    els.habitColorPresets.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-color]");
+      if (!button) return;
+      applyHabitColor(button.dataset.color, { updateText: true });
     });
 
     els.habitForm.addEventListener("submit", saveHabitFromForm);
@@ -1112,11 +1125,22 @@
     els.habitTarget.value = habit?.trackingType === "target" ? (habit.target ?? 1) : 1;
     els.habitNegative.checked = Boolean(habit?.negativeHabit);
     els.habitUnit.value = habit?.unit || "";
-    els.habitColor.value = habit?.color || "#7C5CFC";
-    els.habitColorText.value = (habit?.color || "#7C5CFC").toUpperCase();
+    applyHabitColor(habit?.color || "#7C5CFC", { updateText: true });
     syncTrackingFields();
     openModal(els.habitModal);
     setTimeout(() => els.habitName.focus(), 30);
+  }
+
+  function applyHabitColor(value, { updateText = true } = {}) {
+    const color = normalizeHex(value) || "#7C5CFC";
+    els.habitColor.value = color;
+    if (updateText) els.habitColorText.value = color;
+    els.habitColorPreview?.style.setProperty("--preview-color", color);
+    els.habitColorText.closest(".color-hex-field")?.classList.remove("invalid");
+    els.habitColorPresets?.querySelectorAll("[data-color]").forEach((button) => {
+      button.classList.toggle("selected", normalizeHex(button.dataset.color) === color);
+    });
+    return color;
   }
 
   function syncTrackingFields() {
@@ -1533,8 +1557,11 @@
   }
 
   function normalizeHex(value) {
-    const text = String(value || "").trim();
-    if (/^#[0-9a-fA-F]{6}$/.test(text)) return text.toUpperCase();
+    let text = String(value || "").trim().replace(/^#/, "");
+    if (/^[0-9a-fA-F]{3}$/.test(text)) {
+      text = text.split("").map((char) => char + char).join("");
+    }
+    if (/^[0-9a-fA-F]{6}$/.test(text)) return `#${text.toUpperCase()}`;
     return null;
   }
 
