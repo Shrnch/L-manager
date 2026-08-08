@@ -1,4 +1,4 @@
-# L manager v0.3.3
+# L manager v0.3.4
 
 Local-first habit / life tracker inspired by the old spreadsheet workflow.
 
@@ -38,5 +38,5 @@ Data is saved to browser `localStorage` under `l-manager:data:v1`.
 Use **Export** regularly if you want a portable backup.
 
 
-### v0.3.3
+### v0.3.4
 Negative numerical habits no longer floor at 0%. Their score continues linearly below zero when the result exceeds 2× the target, and trend/overlay charts now display negative percentages.

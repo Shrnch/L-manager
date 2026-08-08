@@ -2,7 +2,7 @@
   "use strict";
 
   const STORAGE_KEY = "l-manager:data:v1";
-  const APP_VERSION = "0.3.3";
+  const APP_VERSION = "0.3.4";
   const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const MONTH_FORMAT = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" });
   const DATE_FORMAT = new Intl.DateTimeFormat("ru", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
@@ -14,6 +14,7 @@
   let relationHabitAId = null;
   let relationHabitBId = null;
   let relationOverlayHabitIds = [];
+  let relationOverlayInitialized = false;
   let relationMode = "overlay";
 
   const els = {
@@ -214,6 +215,7 @@
       const checkbox = event.target.closest("input[type=checkbox][data-overlay-habit]");
       if (!checkbox) return;
       const habitId = checkbox.dataset.overlayHabit;
+      relationOverlayInitialized = true;
       if (checkbox.checked) {
         if (!relationOverlayHabitIds.includes(habitId)) relationOverlayHabitIds.push(habitId);
       } else {
@@ -241,6 +243,7 @@
       relationHabitAId = null;
       relationHabitBId = null;
       relationOverlayHabitIds = [];
+      relationOverlayInitialized = false;
       els.habitList.innerHTML = "";
       els.monthSummary.innerHTML = `
         <div class="summary-item"><span>habits</span><strong>0</strong></div>
@@ -601,11 +604,9 @@
 
     const validIds = new Set(state.habits.map((habit) => habit.id));
     relationOverlayHabitIds = relationOverlayHabitIds.filter((id) => validIds.has(id));
-    if (relationOverlayHabitIds.length === 0) {
+    if (!relationOverlayInitialized) {
       relationOverlayHabitIds = state.habits.slice(0, Math.min(4, state.habits.length)).map((habit) => habit.id);
-    }
-    if (selectedHabitId && validIds.has(selectedHabitId) && !relationOverlayHabitIds.includes(selectedHabitId)) {
-      relationOverlayHabitIds = [selectedHabitId, ...relationOverlayHabitIds].slice(0, Math.min(6, state.habits.length));
+      relationOverlayInitialized = true;
     }
   }
 
@@ -1264,6 +1265,8 @@
 
       state.habits = incoming.habits;
       state.entries = incoming.entries || {};
+      relationOverlayHabitIds = [];
+      relationOverlayInitialized = false;
       state.version = APP_VERSION;
       saveState();
       render();
