@@ -1,4 +1,4 @@
-# L manager v0.3.2
+# L manager v0.3.3
 
 Local-first habit / life tracker inspired by the old spreadsheet workflow.
 
@@ -36,3 +36,7 @@ Open `index.html` in a modern browser. No server, npm install, account, or inter
 Data is saved to browser `localStorage` under `l-manager:data:v1`.
 
 Use **Export** regularly if you want a portable backup.
+
+
+### v0.3.3
+Negative numerical habits no longer floor at 0%. Their score continues linearly below zero when the result exceeds 2× the target, and trend/overlay charts now display negative percentages.

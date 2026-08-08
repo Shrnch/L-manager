@@ -2,7 +2,7 @@
   "use strict";
 
   const STORAGE_KEY = "l-manager:data:v1";
-  const APP_VERSION = "0.3.2";
+  const APP_VERSION = "0.3.3";
   const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const MONTH_FORMAT = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" });
   const DATE_FORMAT = new Intl.DateTimeFormat("ru", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
@@ -518,13 +518,18 @@
 
     const trackedValues = values.filter((value) => value != null && Number.isFinite(value));
     const highest = trackedValues.length ? Math.max(...trackedValues, 100) : 100;
+    const lowest = trackedValues.length ? Math.min(...trackedValues, 0) : 0;
     const yMax = Math.max(100, Math.ceil(highest / 50) * 50);
+    const yMin = Math.min(0, Math.floor(lowest / 50) * 50);
     const innerW = width - pad.left - pad.right;
     const innerH = height - pad.top - pad.bottom;
     const xFor = (index) => pad.left + (days === 1 ? 0 : (index / (days - 1)) * innerW);
-    const yFor = (value) => pad.top + innerH - (Math.max(0, Math.min(value, yMax)) / yMax) * innerH;
+    const yFor = (value) => {
+      const clamped = Math.max(yMin, Math.min(value, yMax));
+      return pad.top + innerH - ((clamped - yMin) / (yMax - yMin)) * innerH;
+    };
 
-    const tickValues = [...new Set([0, yMax / 2, 100, yMax])].sort((a, b) => a - b);
+    const tickValues = [...new Set([yMin, 0, 100, yMax])].sort((a, b) => a - b);
     const grids = tickValues.map((tick) => {
       const y = yFor(tick);
       const isTarget = Math.abs(tick - 100) < 0.001;
@@ -762,13 +767,18 @@
     });
     const finite = series.flatMap((item) => item.values).filter((value) => value != null && Number.isFinite(value));
     const highest = finite.length ? Math.max(...finite, 100) : 100;
+    const lowest = finite.length ? Math.min(...finite, 0) : 0;
     const yMax = Math.max(100, Math.ceil(highest / 50) * 50);
+    const yMin = Math.min(0, Math.floor(lowest / 50) * 50);
     const innerW = width - pad.left - pad.right;
     const innerH = height - pad.top - pad.bottom;
     const xFor = (index) => pad.left + (days === 1 ? 0 : (index / (days - 1)) * innerW);
-    const yFor = (value) => pad.top + innerH - (Math.max(0, Math.min(value, yMax)) / yMax) * innerH;
+    const yFor = (value) => {
+      const clamped = Math.max(yMin, Math.min(value, yMax));
+      return pad.top + innerH - ((clamped - yMin) / (yMax - yMin)) * innerH;
+    };
 
-    const tickValues = [...new Set([0, yMax / 2, 100, yMax])].sort((a, b) => a - b);
+    const tickValues = [...new Set([yMin, 0, 100, yMax])].sort((a, b) => a - b);
     const grids = tickValues.map((tick) => {
       const y = yFor(tick);
       const isTarget = Math.abs(tick - 100) < 0.001;
@@ -1181,9 +1191,10 @@
     if (target === 0) return value === 0 ? 100 : 0;
 
     if (habit.negativeHabit) {
-      // Negative numerical habits use the target as the 100% reference point:
-      // target = 100%, 0 = 200%, 2x target (or more) = 0%.
-      return Math.max(0, (2 - value / target) * 100);
+      // Negative numerical habits use the target as the 100% reference point.
+      // The scale stays linear without a lower floor, so increasingly large
+      // overruns remain distinguishable: target=100%, 2x=0%, 3x=-100%, etc.
+      return (2 - value / target) * 100;
     }
     return (value / target) * 100;
   }
