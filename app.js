@@ -2,7 +2,7 @@
   "use strict";
 
   const STORAGE_KEY = "l-manager:data:v1";
-  const APP_VERSION = "0.3.4";
+  const APP_VERSION = "0.3.5";
   const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const MONTH_FORMAT = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" });
   const DATE_FORMAT = new Intl.DateTimeFormat("ru", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
@@ -1219,15 +1219,31 @@
 
   function colorForPercent(hex, percent) {
     const rgb = hexToRgb(hex) || { r: 124, g: 92, b: 252 };
-    const clamped = Math.max(0, Math.min(100, percent));
-    const progress = clamped / 100;
+    const value = Number.isFinite(Number(percent)) ? Number(percent) : 0;
 
-    // 0% is intentionally distinct from no data: a faint but visible tint.
-    const alpha = 0.12 + progress * 0.58;
-    const darken = 0.72 + progress * 0.28;
-    const r = Math.round(rgb.r * darken);
-    const g = Math.round(rgb.g * darken);
-    const b = Math.round(rgb.b * darken);
+    if (value <= 100) {
+      const clamped = Math.max(0, value);
+      const progress = clamped / 100;
+
+      // 0% is intentionally distinct from no data: a faint but visible tint.
+      const alpha = 0.12 + progress * 0.58;
+      const darken = 0.72 + progress * 0.28;
+      const r = Math.round(rgb.r * darken);
+      const g = Math.round(rgb.g * darken);
+      const b = Math.round(rgb.b * darken);
+      return `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(3)})`;
+    }
+
+    // 100% is the habit's base color. Above target, progressively brighten it
+    // toward white instead of collapsing every overachievement into one shade.
+    // The exponential curve keeps the scale useful even for 200%, 300%, 500%+.
+    const over = value - 100;
+    const intensity = 1 - Math.exp(-over / 125);
+    const whiteMix = 0.58 * intensity;
+    const alpha = 0.70 + 0.26 * intensity;
+    const r = Math.round(rgb.r + (255 - rgb.r) * whiteMix);
+    const g = Math.round(rgb.g + (255 - rgb.g) * whiteMix);
+    const b = Math.round(rgb.b + (255 - rgb.b) * whiteMix);
 
     return `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(3)})`;
   }
