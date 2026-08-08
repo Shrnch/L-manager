@@ -2,7 +2,7 @@
   "use strict";
 
   const STORAGE_KEY = "l-manager:data:v1";
-  const APP_VERSION = "0.3.5";
+  const APP_VERSION = "0.3.6";
   const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const MONTH_FORMAT = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" });
   const DATE_FORMAT = new Intl.DateTimeFormat("ru", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
@@ -1221,13 +1221,28 @@
     const rgb = hexToRgb(hex) || { r: 124, g: 92, b: 252 };
     const value = Number.isFinite(Number(percent)) ? Number(percent) : 0;
 
-    if (value <= 100) {
-      const clamped = Math.max(0, value);
-      const progress = clamped / 100;
+    // Below 0% is a real continuation of the scale, not a floor.
+    // Move progressively toward a shared failure red while increasing opacity,
+    // so -20%, -100% and -300% remain visually distinct from 0% and each other.
+    if (value < 0) {
+      const magnitude = -value;
+      const intensity = 1 - Math.exp(-magnitude / 90);
+      const failure = { r: 255, g: 67, b: 91 };
+      const mix = 0.22 + 0.66 * intensity;
+      const alpha = 0.26 + 0.68 * intensity;
+      const r = Math.round(rgb.r + (failure.r - rgb.r) * mix);
+      const g = Math.round(rgb.g + (failure.g - rgb.g) * mix);
+      const b = Math.round(rgb.b + (failure.b - rgb.b) * mix);
+      return `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(3)})`;
+    }
 
-      // 0% is intentionally distinct from no data: a faint but visible tint.
-      const alpha = 0.12 + progress * 0.58;
-      const darken = 0.72 + progress * 0.28;
+    if (value <= 100) {
+      const progress = value / 100;
+      // sqrt makes small positive values visibly different from 0% instead of
+      // spending most of the low end in nearly indistinguishable dark shades.
+      const visibleProgress = Math.sqrt(progress);
+      const alpha = value === 0 ? 0.12 : 0.18 + visibleProgress * 0.52;
+      const darken = value === 0 ? 0.68 : 0.70 + visibleProgress * 0.30;
       const r = Math.round(rgb.r * darken);
       const g = Math.round(rgb.g * darken);
       const b = Math.round(rgb.b * darken);
