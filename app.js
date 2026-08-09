@@ -3,7 +3,7 @@
 
   const STORAGE_KEY = "l-manager:data:v1";
   const MIGRATION_BACKUP_KEY = "l-manager:data:backup:pre-sleep-v0.5.1";
-  const APP_VERSION = "0.5.4";
+  const APP_VERSION = "0.6.0";
 
   const I18N = {
     en: {

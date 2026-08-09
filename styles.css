@@ -1097,3 +1097,578 @@ button { color: inherit; }
   font-size: 9px;
   font-variant-numeric: tabular-nums;
 }
+
+/* v0.6.0 — compact desktop layout, second pass.
+   Density comes from layout, not from microscopic controls. */
+@media (min-width: 1050px) {
+  :root {
+    --radius: 14px;
+    --radius-sm: 9px;
+  }
+
+  .app-shell {
+    width: min(1760px, calc(100% - 28px));
+    padding: 14px 0 42px;
+  }
+
+  .topbar {
+    min-height: 40px;
+    gap: 18px;
+    margin-bottom: 10px;
+  }
+  .brand-block { gap: 9px; }
+  .brand-mark {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    font-size: 16px;
+    box-shadow: 0 7px 20px rgba(124, 92, 252, 0.22);
+  }
+  .brand-block h1 { font-size: 15px; }
+  .brand-block p { margin-top: 3px; font-size: 8px; }
+  .topbar-actions { gap: 6px; }
+  .language-switch { padding: 2px; border-radius: 8px; }
+  .language-button { min-width: 30px; height: 28px; padding: 0 7px; border-radius: 6px; font-size: 8.5px; }
+  .button { min-height: 32px; padding: 0 11px; border-radius: 8px; gap: 5px; font-size: 10.5px; }
+
+  .month-toolbar {
+    min-height: 52px;
+    padding: 7px 10px;
+    gap: 12px;
+    margin-bottom: 10px;
+    border-radius: 13px;
+  }
+  .month-nav { gap: 5px; }
+  .icon-button { width: 30px; height: 30px; border-radius: 8px; font-size: 14px; }
+  .month-button { min-width: 150px; min-height: 34px; padding: 1px 8px; border-radius: 8px; }
+  #monthLabel { font-size: 13px; }
+  .month-button-caption { font-size: 7.5px; }
+  .month-toolbar-right { gap: 14px; }
+  .display-toggle { gap: 7px; font-size: 8.5px; }
+  .display-toggle .toggle-switch { width: 30px; height: 18px; }
+  .display-toggle .toggle-switch::after { top: 2px; left: 2px; width: 12px; height: 12px; }
+  .display-toggle input:checked + .display-toggle-switch::after { transform: translateX(12px); }
+  .month-summary { gap: 14px; }
+  .summary-item { min-width: 60px; }
+  .summary-item span { margin-bottom: 2px; font-size: 7px; }
+  .summary-item strong { font-size: 12px; }
+
+  .workspace-layout {
+    grid-template-columns: minmax(0, 1fr) 316px;
+    gap: 10px;
+  }
+  .tracker-column { min-width: 0; }
+  .habit-list { gap: 8px; }
+
+  /* Each habit is a horizontal band: info rail + calendar.
+     This removes an entire header row from every habit. */
+  .habit-card {
+    display: grid;
+    grid-template-columns: 188px minmax(0, 1fr);
+    min-height: 0;
+    border-radius: 12px;
+  }
+  .habit-card::before { width: 3px; }
+  .habit-header {
+    min-height: 0;
+    padding: 10px 10px 9px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: 9px;
+    border-bottom: 0;
+    border-right: 1px solid var(--border);
+  }
+  .habit-heading { min-width: 0; }
+  .habit-title-row { gap: 7px; width: 100%; }
+  .habit-color-dot { width: 7px; height: 7px; }
+  .habit-title { font-size: 12.5px; line-height: 1.15; }
+  .habit-meta {
+    margin: 5px 0 0 14px;
+    font-size: 8.5px;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .negative-target-badge,
+  .positive-target-badge { padding: 1px 4px; font-size: 6.5px; }
+
+  .habit-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 28px;
+    align-items: end;
+    gap: 7px;
+  }
+  .habit-kpis {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+  }
+  .habit-kpi { text-align: left; min-width: 0; }
+  .habit-kpi span { font-size: 6.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .habit-kpi strong { margin-top: 1px; font-size: 10px; }
+  .edit-habit { width: 28px; height: 28px; font-size: 12px; }
+
+  .calendar-wrap {
+    min-width: 0;
+    overflow-x: hidden;
+  }
+  .calendar {
+    min-width: 600px;
+    grid-template-columns: repeat(7, minmax(72px, 1fr));
+    padding: 5px 7px 7px;
+    gap: 3px;
+  }
+  .weekday {
+    height: 16px;
+    padding: 0 6px;
+    font-size: 7.5px;
+    letter-spacing: .07em;
+  }
+  .day-cell {
+    height: 25px;
+    padding: 0 6px;
+    border-radius: 6px;
+  }
+  .day-cell:not(.day-outside):hover {
+    transform: none;
+    border-color: rgba(255,255,255,.22);
+    filter: brightness(1.07);
+  }
+  .day-top {
+    position: absolute;
+    left: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .day-number { font-size: 8.5px; line-height: 1; }
+  .day-note-dot { width: 4px; height: 4px; margin-top: 0; }
+  .day-value {
+    left: 26px;
+    right: 47px;
+    bottom: auto;
+    top: 50%;
+    transform: translateY(-50%);
+    max-width: none;
+    font-size: 8px;
+    line-height: 1;
+  }
+  .day-percent {
+    right: 6px;
+    bottom: auto;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 9px;
+    line-height: 1;
+  }
+
+  /* Insights are compact, but still human-sized. */
+  .insights-panel {
+    position: sticky;
+    order: initial;
+    top: 10px;
+    padding-bottom: 9px;
+    border-radius: 12px;
+  }
+  .insights-header { padding: 11px 12px 9px; }
+  .insights-header h2 { margin-top: 3px; font-size: 13px; }
+  .eyebrow { font-size: 7.5px; }
+  .all-habits-heatmap-block { margin: 9px 11px 0; }
+  .insight-section { margin: 9px 11px 0; padding-top: 9px; }
+  .insight-section-heading { margin-bottom: 6px; }
+  .insight-section-heading h3 { font-size: 10px; }
+  .insight-section-heading p { margin-top: 2px; font-size: 7.5px; }
+  .insight-select-field { gap: 4px; padding: 9px 11px 0; }
+  .insight-select-field > span { font-size: 7.5px; }
+  .insight-select-field select { height: 32px; padding: 0 8px; border-radius: 8px; font-size: 9px; }
+  .insight-kpis { gap: 5px; padding: 7px 11px 0; }
+  .insight-kpi { padding: 6px 7px; border-radius: 8px; }
+  .insight-kpi span { font-size: 6.5px; }
+  .insight-kpi strong { margin-top: 2px; font-size: 11px; }
+  .habit-trend-chart { min-height: 145px; border-radius: 9px; }
+  .habit-matrix { gap: 4px; }
+  .habit-matrix-row,
+  .habit-matrix-date-row { grid-template-columns: minmax(50px, 62px) minmax(0, 1fr); gap: 5px; }
+  .habit-matrix-range { margin-left: 67px; font-size: 6.5px; }
+  .habit-matrix-label { gap: 4px; font-size: 6.5px; }
+  .habit-matrix-label i { width: 5px; height: 5px; }
+  .habit-matrix-cells,
+  .habit-matrix-dates { gap: 1px; }
+  .habit-matrix-date { font-size: 5px; }
+  .relation-controls { gap: 5px; margin-bottom: 6px; }
+  .relation-select { grid-template-columns: 18px minmax(0,1fr); gap: 4px; }
+  .relation-select > span { width: 18px; height: 18px; border-radius: 5px; font-size: 7px; }
+  .relation-select select { height: 29px; border-radius: 7px; font-size: 8px; }
+  .relation-mode-switch { margin-bottom: 6px; padding: 2px; border-radius: 8px; }
+  .relation-mode-button { min-height: 25px; border-radius: 6px; font-size: 8px; }
+  .comparison-row { gap: 4px 7px; padding: 6px 7px; border-radius: 8px; }
+  .comparison-name, .comparison-value { font-size: 8px; }
+  .comparison-meta { font-size: 6.5px; }
+}
+
+/* A slightly narrower desktop keeps the same compact cards but moves
+   visualisation below the tracker instead of squeezing the calendar. */
+@media (min-width: 901px) and (max-width: 1049px) {
+  .workspace-layout { grid-template-columns: 1fr; }
+  .insights-panel { position: static; order: initial; }
+  .habit-card {
+    display: grid;
+    grid-template-columns: 170px minmax(0, 1fr);
+  }
+  .habit-header {
+    min-height: 0;
+    padding: 10px 10px 9px 14px;
+    flex-direction: column;
+    align-items: stretch;
+    border-bottom: 0;
+    border-right: 1px solid var(--border);
+  }
+  .habit-actions { margin-top: auto; }
+  .calendar { min-width: 560px; padding: 5px 7px 7px; gap: 3px; }
+  .weekday { height: 17px; font-size: 8px; }
+  .day-cell { height: 28px; padding: 0 6px; border-radius: 6px; }
+  .day-top { position: absolute; left: 6px; top: 50%; transform: translateY(-50%); }
+  .day-number { font-size: 9px; }
+  .day-value { left: 27px; right: 50px; bottom: auto; top: 50%; transform: translateY(-50%); font-size: 8px; }
+  .day-percent { right: 6px; bottom: auto; top: 50%; transform: translateY(-50%); font-size: 9px; }
+}
+
+@media (max-width: 900px) {
+  .workspace-layout { grid-template-columns: 1fr; }
+  .insights-panel { position: static; order: initial; }
+}
+
+/* v0.6.0 — compact calendar proportions hotfix.
+   Keep day cells compact and only slightly wider than tall instead of stretching
+   every column to fill all available horizontal space. */
+@media (min-width: 1050px) {
+  .calendar-wrap {
+    overflow-x: auto;
+  }
+
+  .calendar {
+    width: max-content;
+    min-width: 0;
+    grid-template-columns: repeat(7, 78px);
+    justify-content: start;
+  }
+
+  .weekday,
+  .day-cell {
+    width: 78px;
+  }
+
+  .day-cell {
+    height: 31px;
+  }
+}
+
+@media (min-width: 901px) and (max-width: 1049px) {
+  .calendar-wrap {
+    overflow-x: auto;
+  }
+
+  .calendar {
+    width: max-content;
+    min-width: 0;
+    grid-template-columns: repeat(7, 72px);
+    justify-content: start;
+  }
+
+  .weekday,
+  .day-cell {
+    width: 72px;
+  }
+
+  .day-cell {
+    height: 30px;
+  }
+}
+
+/* v0.6.0 — content-width tracker hotfix.
+   The tracker column should be only as wide as the info rail + 7 compact day cells.
+   Do not leave a large unused area inside every habit card. */
+@media (min-width: 1160px) {
+  .app-shell {
+    width: min(1120px, calc(100% - 28px));
+  }
+
+  .workspace-layout {
+    grid-template-columns: 766px 316px;
+    justify-content: start;
+    gap: 10px;
+  }
+
+  .tracker-column,
+  .habit-list,
+  .habit-card {
+    width: 766px;
+    max-width: 100%;
+  }
+
+  .habit-card {
+    grid-template-columns: 188px 578px;
+  }
+
+  .calendar-wrap {
+    width: 578px;
+    max-width: 578px;
+    overflow-x: hidden;
+  }
+}
+
+/* v0.6.0 — compact day-cell result layout hotfix.
+   Compact cells keep date/percentage on the top line and the raw value on a second line.
+   This avoids collisions between date, value and percentage at ~72–78px cell widths. */
+@media (min-width: 901px) {
+  .day-cell {
+    padding: 3px 6px;
+  }
+
+  .day-top {
+    position: absolute;
+    left: 6px;
+    top: 4px;
+    right: auto;
+    transform: none;
+    gap: 3px;
+    align-items: center;
+    line-height: 1;
+  }
+
+  .day-number {
+    font-size: 9px;
+    line-height: 1;
+  }
+
+  .day-note-dot {
+    width: 4px;
+    height: 4px;
+    margin-top: 0;
+  }
+
+  .day-percent {
+    right: 6px;
+    top: 4px;
+    bottom: auto;
+    transform: none;
+    max-width: 48px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 9px;
+    line-height: 1;
+    text-align: right;
+  }
+
+  .day-value {
+    left: 6px;
+    right: 6px;
+    top: auto;
+    bottom: 3px;
+    transform: none;
+    max-width: none;
+    font-size: 8px;
+    line-height: 1;
+  }
+}
+
+/* v0.6.0 — PC-wide layout pass.
+   Use the monitor instead of shrinking the app into a centered mobile-like column. */
+@media (min-width: 1200px) {
+  .app-shell {
+    width: calc(100% - 24px);
+    max-width: none;
+    margin: 0 12px;
+    padding: 12px 0 36px;
+  }
+
+  .topbar {
+    min-height: 48px;
+    margin-bottom: 10px;
+  }
+  .brand-mark {
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+    font-size: 18px;
+  }
+  .brand-block h1 { font-size: 17px; }
+  .brand-block p { font-size: 9px; }
+  .language-button { min-width: 34px; height: 32px; font-size: 9px; }
+  .button { min-height: 36px; padding: 0 14px; font-size: 11px; }
+
+  .month-toolbar {
+    min-height: 58px;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+  }
+  .icon-button { width: 34px; height: 34px; font-size: 15px; }
+  .month-button { min-width: 170px; min-height: 38px; }
+  #monthLabel { font-size: 14px; }
+  .month-button-caption { font-size: 8px; }
+  .display-toggle { font-size: 9.5px; }
+  .summary-item { min-width: 68px; }
+  .summary-item span { font-size: 7.5px; }
+  .summary-item strong { font-size: 13px; }
+
+  /* Tracker hugs the left edge, insights hug the right edge.
+     The wide desktop gap lives BETWEEN them, never inside a habit card. */
+  .workspace-layout {
+    width: 100%;
+    grid-template-columns: 940px 380px;
+    justify-content: space-between;
+    align-items: start;
+    gap: 20px;
+  }
+
+  .tracker-column,
+  .habit-list,
+  .habit-card {
+    width: 940px;
+    max-width: 940px;
+  }
+
+  .habit-list { gap: 10px; }
+
+  .habit-card {
+    grid-template-columns: 220px 720px;
+    border-radius: 13px;
+  }
+
+  .habit-header {
+    padding: 11px 12px 10px 16px;
+    gap: 10px;
+  }
+  .habit-title-row { gap: 8px; }
+  .habit-color-dot { width: 8px; height: 8px; }
+  .habit-title { font-size: 14px; }
+  .habit-meta {
+    margin: 5px 0 0 16px;
+    font-size: 9.5px;
+    line-height: 1.35;
+  }
+  .negative-target-badge,
+  .positive-target-badge { font-size: 7px; }
+  .habit-kpi span { font-size: 7px; }
+  .habit-kpi strong { font-size: 11px; }
+  .edit-habit { width: 30px; height: 30px; }
+
+  .calendar-wrap {
+    width: 720px;
+    max-width: 720px;
+    overflow: hidden;
+  }
+
+  .calendar {
+    box-sizing: border-box;
+    width: 720px;
+    min-width: 720px;
+    grid-template-columns: repeat(7, 98px);
+    justify-content: start;
+    padding: 7px 8px 8px;
+    gap: 4px;
+  }
+
+  .weekday,
+  .day-cell {
+    width: 98px;
+  }
+
+  .weekday {
+    height: 18px;
+    padding: 0 7px;
+    font-size: 8.5px;
+    letter-spacing: .06em;
+  }
+
+  .day-cell {
+    height: 32px;
+    padding: 4px 7px;
+    border-radius: 7px;
+  }
+  .day-top { left: 7px; top: 5px; }
+  .day-number { font-size: 9.5px; }
+  .day-percent {
+    right: 7px;
+    top: 5px;
+    max-width: 58px;
+    font-size: 9.5px;
+  }
+  .day-value {
+    left: 7px;
+    right: 7px;
+    bottom: 4px;
+    font-size: 8.5px;
+  }
+
+  .insights-panel {
+    width: 380px;
+    max-width: 380px;
+    top: 10px;
+    border-radius: 13px;
+  }
+  .insights-header { padding: 13px 14px 11px; }
+  .insights-header h2 { font-size: 15px; }
+  .eyebrow { font-size: 8px; }
+  .all-habits-heatmap-block { margin: 11px 13px 0; }
+  .insight-section { margin: 11px 13px 0; padding-top: 11px; }
+  .insight-section-heading h3 { font-size: 11px; }
+  .insight-section-heading p { font-size: 8px; }
+  .insight-select-field { padding: 10px 13px 0; }
+  .insight-select-field > span { font-size: 8px; }
+  .insight-select-field select { height: 35px; font-size: 10px; }
+  .insight-kpis { padding: 8px 13px 0; }
+  .insight-kpi { padding: 7px 8px; }
+  .insight-kpi span { font-size: 7px; }
+  .insight-kpi strong { font-size: 12px; }
+  .habit-trend-chart { min-height: 170px; }
+  .habit-matrix-label { font-size: 7px; }
+  .habit-matrix-date { font-size: 5.5px; }
+  .relation-select > span { width: 20px; height: 20px; font-size: 7.5px; }
+  .relation-select select { height: 32px; font-size: 9px; }
+  .relation-mode-button { min-height: 28px; font-size: 8.5px; }
+  .comparison-name, .comparison-value { font-size: 9px; }
+  .comparison-meta { font-size: 7px; }
+}
+
+/* On very wide monitors, keep the controls readable but don't turn day cells into bars. */
+@media (min-width: 1800px) {
+  .app-shell {
+    width: calc(100% - 32px);
+    margin: 0 16px;
+  }
+  .workspace-layout {
+    grid-template-columns: 980px 410px;
+    gap: 28px;
+  }
+  .tracker-column,
+  .habit-list,
+  .habit-card {
+    width: 980px;
+    max-width: 980px;
+  }
+  .habit-card { grid-template-columns: 232px 748px; }
+  .calendar-wrap { width: 748px; max-width: 748px; }
+  .calendar {
+    width: 748px;
+    min-width: 748px;
+    grid-template-columns: repeat(7, 102px);
+    gap: 4px;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  .weekday,
+  .day-cell { width: 102px; }
+  .day-cell { height: 34px; }
+  .habit-title { font-size: 14.5px; }
+  .insights-panel { width: 410px; max-width: 410px; }
+}
