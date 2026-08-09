@@ -1,8 +1,9 @@
-# L manager v0.4.1
+# L manager v0.4.2
 
 Local-first habit tracker built with plain HTML, CSS and JavaScript.
 
-## v0.4.1
+## v0.4.2
+- Fixed Show percentages in the day-entry modal: numeric values and Yes/No remain visible while calculated percentages are hidden.
 - Reworked habit color selection into a larger, clearer color picker.
 - Added direct HEX entry with live preview (`#7C5CFC`, `7C5CFC`, and short `#ABC` formats are accepted).
 - Added a quick preset palette for common colors.

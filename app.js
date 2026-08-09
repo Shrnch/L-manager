@@ -2,7 +2,7 @@
   "use strict";
 
   const STORAGE_KEY = "l-manager:data:v1";
-  const APP_VERSION = "0.4.1";
+  const APP_VERSION = "0.4.2";
 
   const I18N = {
     en: {
@@ -278,6 +278,7 @@
       state.settings.showPercentages = els.showPercentagesToggle.checked;
       saveState();
       render();
+      updateEntryPreview();
     });
     [els.langRuBtn, els.langEnBtn].forEach((button) => {
       button.addEventListener("click", () => {
@@ -1286,6 +1287,9 @@
       els.entryPercentPreview.textContent = "—";
       return;
     }
+
+    const showPercentages = state.settings?.showPercentages !== false;
+
     if (habit.trackingType === "boolean") {
       const selected = els.booleanEntry.dataset.value;
       if (selected !== "1" && selected !== "0") {
@@ -1293,15 +1297,28 @@
         return;
       }
       const value = Number(selected);
-      const success = value === 1;
-      els.entryPercentPreview.textContent = `${value === 1 ? t("yes") : t("no")} · ${success ? "100%" : "0%"}`;
+      const label = value === 1 ? t("yes") : t("no");
+      els.entryPercentPreview.textContent = showPercentages
+        ? `${label} · ${value === 1 ? "100%" : "0%"}`
+        : label;
       return;
     }
+
     const value = Number(els.entryValue.value);
     if (els.entryValue.value === "" || !Number.isFinite(value) || value < 0) {
       els.entryPercentPreview.textContent = "—";
       return;
     }
+
+    if (!showPercentages) {
+      if (habit.trackingType === "percent") {
+        els.entryPercentPreview.textContent = "—";
+      } else {
+        els.entryPercentPreview.textContent = `${formatNumber(value)}${habit.unit ? ` ${habit.unit}` : ""}`;
+      }
+      return;
+    }
+
     const percent = getEntryPercent(habit, { value });
     els.entryPercentPreview.textContent = `${formatPercent(percent)}%`;
   }
