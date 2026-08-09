@@ -3,7 +3,7 @@
 
   const STORAGE_KEY = "l-manager:data:v1";
   const MIGRATION_BACKUP_KEY = "l-manager:data:backup:pre-sleep-v0.5.1";
-  const APP_VERSION = "0.5.2";
+  const APP_VERSION = "0.5.3";
 
   const I18N = {
     en: {
@@ -1591,27 +1591,52 @@
     const base = hexToRgb(hex) || { r: 124, g: 92, b: 252 };
     const value = Number.isFinite(Number(percent)) ? Number(percent) : 0;
 
-    // Simple, predictable scale based directly on the habit's chosen HEX:
-    // <= 0% = one pale minimum tint
-    // 100% = the exact chosen HEX
-    // > 100% = gently darker, capped so colours never collapse into black.
-    let mixWithWhite = 0;
-    let mixWithBlack = 0;
+    // Positive scale: pale tint at 0%, exact chosen HEX at 100%, then gently darker.
+    // Negative scale is deliberately separate: the farther below 0, the more the
+    // cell shifts toward a muted dark failure tone. This keeps 0%, -100%, -300%
+    // and -500% clearly distinguishable instead of collapsing into the same white.
+    let r;
+    let g;
+    let b;
 
-    if (value <= 0) {
-      mixWithWhite = 0.86;
-    } else if (value < 100) {
-      const progress = value / 100;
-      // Linear movement from a pale tint to the exact base colour.
-      mixWithWhite = 0.86 * (1 - progress);
-    } else if (value > 100) {
-      const overIntensity = 1 - Math.exp(-(value - 100) / 110);
-      mixWithBlack = 0.22 * overIntensity;
+    if (value < 0) {
+      const zeroWhiteMix = 0.80;
+      const zeroShade = {
+        r: base.r * (1 - zeroWhiteMix) + 255 * zeroWhiteMix,
+        g: base.g * (1 - zeroWhiteMix) + 255 * zeroWhiteMix,
+        b: base.b * (1 - zeroWhiteMix) + 255 * zeroWhiteMix,
+      };
+
+      // Keep a little of the habit hue in the failure anchor so different habits
+      // remain identifiable, while desaturating enough to read as a bad state.
+      const failureNeutral = { r: 72, g: 76, b: 90 };
+      const baseWeight = 0.15;
+      const failureAnchor = {
+        r: base.r * baseWeight + failureNeutral.r * (1 - baseWeight),
+        g: base.g * baseWeight + failureNeutral.g * (1 - baseWeight),
+        b: base.b * baseWeight + failureNeutral.b * (1 - baseWeight),
+      };
+
+      const negativeIntensity = 1 - Math.exp(-Math.abs(value) / 170);
+      r = Math.round(zeroShade.r + (failureAnchor.r - zeroShade.r) * negativeIntensity);
+      g = Math.round(zeroShade.g + (failureAnchor.g - zeroShade.g) * negativeIntensity);
+      b = Math.round(zeroShade.b + (failureAnchor.b - zeroShade.b) * negativeIntensity);
+    } else {
+      let mixWithWhite = 0;
+      let mixWithBlack = 0;
+
+      if (value < 100) {
+        const progress = value / 100;
+        mixWithWhite = 0.80 * (1 - progress);
+      } else if (value > 100) {
+        const overIntensity = 1 - Math.exp(-(value - 100) / 110);
+        mixWithBlack = 0.22 * overIntensity;
+      }
+
+      r = Math.round((base.r * (1 - mixWithWhite) + 255 * mixWithWhite) * (1 - mixWithBlack));
+      g = Math.round((base.g * (1 - mixWithWhite) + 255 * mixWithWhite) * (1 - mixWithBlack));
+      b = Math.round((base.b * (1 - mixWithWhite) + 255 * mixWithWhite) * (1 - mixWithBlack));
     }
-
-    const r = Math.round((base.r * (1 - mixWithWhite) + 255 * mixWithWhite) * (1 - mixWithBlack));
-    const g = Math.round((base.g * (1 - mixWithWhite) + 255 * mixWithWhite) * (1 - mixWithBlack));
-    const b = Math.round((base.b * (1 - mixWithWhite) + 255 * mixWithWhite) * (1 - mixWithBlack));
 
     // Perceived luminance is used only to choose readable text colour.
     const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
