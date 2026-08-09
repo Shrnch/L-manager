@@ -984,3 +984,51 @@ button { color: inherit; }
     flex-direction: column;
   }
 }
+
+/* v0.5.0 — compact built-in Sleep habit */
+.sleep-settings {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(79,140,255,.045);
+}
+.sleep-settings-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.sleep-settings-heading > div {
+  display: grid;
+  gap: 3px;
+}
+.sleep-settings-heading strong {
+  color: #d7d9df;
+  font-size: 11px;
+}
+.sleep-settings-heading small {
+  color: var(--muted-2);
+  font-size: 9px;
+  line-height: 1.35;
+}
+.sleep-settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+.sleep-entry {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.sleep-entry input[type="time"],
+.sleep-settings input[type="time"] {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 560px) {
+  .sleep-settings-grid { grid-template-columns: 1fr; }
+  .sleep-entry { grid-template-columns: 1fr 1fr; }
+}

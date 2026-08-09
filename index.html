@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="dark" />
-  <title>l-manager — v0.4.3</title>
+  <title>l-manager — v0.5.1</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -173,12 +173,13 @@
           <input id="habitName" type="text" maxlength="80" data-i18n-placeholder="habitNamePlaceholder" placeholder="Например: Читать" autocomplete="off" required />
         </label>
 
-        <label class="field">
+        <label class="field" id="trackingTypeField">
           <span data-i18n="tracking">Tracking</span>
           <select id="habitTrackingType">
             <option value="target" data-i18n="targetValue">Target value</option>
             <option value="percent" data-i18n="manualPercent">Manual percent</option>
             <option value="boolean" data-i18n="yesNo">Yes / No</option>
+            <option value="sleep" data-i18n="sleep" hidden>Sleep</option>
           </select>
         </label>
 
@@ -191,6 +192,32 @@
           <span data-i18n="unit">Unit</span>
           <input id="habitUnit" type="text" maxlength="24" data-i18n-placeholder="unitPlaceholder" placeholder="min, pages, km…" autocomplete="off" />
         </label>
+
+        <section class="sleep-settings field-span-2" id="sleepSettingsField" hidden>
+          <div class="sleep-settings-heading">
+            <div>
+              <strong data-i18n="sleepSettings">Sleep settings</strong>
+              <small data-i18n="sleepSettingsHint">Used only for the built-in Sleep habit</small>
+            </div>
+          </div>
+          <div class="sleep-settings-grid">
+            <label class="field">
+              <span data-i18n="sleepTargetDuration">Target duration</span>
+              <div class="value-input-wrap">
+                <input id="sleepTargetHours" type="number" min="0.5" max="16" step="0.25" value="8" />
+                <span class="input-unit">h</span>
+              </div>
+            </label>
+            <label class="field">
+              <span data-i18n="targetBedtime">Target bedtime</span>
+              <input id="sleepTargetBedtime" type="time" value="00:30" />
+            </label>
+            <label class="field">
+              <span data-i18n="targetWakeTime">Target wake-up</span>
+              <input id="sleepTargetWake" type="time" value="08:30" />
+            </label>
+          </div>
+        </section>
 
         <div class="field color-field">
           <span data-i18n="color">Color</span>
@@ -259,6 +286,17 @@
             <span id="entryUnitBadge" class="input-unit"></span>
           </div>
         </label>
+
+        <div class="sleep-entry field-span-2" id="sleepEntry" hidden>
+          <label class="field">
+            <span data-i18n="bedtime">Bedtime</span>
+            <input id="entryBedtime" type="time" />
+          </label>
+          <label class="field">
+            <span data-i18n="wakeUp">Wake up</span>
+            <input id="entryWakeTime" type="time" />
+          </label>
+        </div>
 
         <div class="boolean-entry field-span-2" id="booleanEntry" hidden>
           <button class="boolean-choice" id="entryYesBtn" type="button" data-boolean-value="1" data-i18n="yes">Yes</button>
