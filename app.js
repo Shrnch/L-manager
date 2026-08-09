@@ -3,7 +3,7 @@
 
   const STORAGE_KEY = "l-manager:data:v1";
   const MIGRATION_BACKUP_KEY = "l-manager:data:backup:pre-sleep-v0.5.1";
-  const APP_VERSION = "0.5.1";
+  const APP_VERSION = "0.5.2";
 
   const I18N = {
     en: {
@@ -1588,44 +1588,34 @@
   }
 
   function getPercentShade(hex, percent) {
-    const rgb = hexToRgb(hex) || { r: 124, g: 92, b: 252 };
-    const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+    const base = hexToRgb(hex) || { r: 124, g: 92, b: 252 };
     const value = Number.isFinite(Number(percent)) ? Number(percent) : 0;
 
-    // Keep every habit recognisably its own hue, like the original spreadsheet:
-    // low completion is a pale tint and higher completion becomes progressively
-    // darker / richer. The dark end is deliberately capped so different habit
-    // colours never collapse into near-black.
-    const baseS = clamp(hsl.s, 0.55, 0.96);
-    const targetL = clamp(hsl.l, 0.34, 0.58);
-    const paleL = 0.90;
-    const paleS = Math.max(0.32, baseS * 0.58);
+    // Simple, predictable scale based directly on the habit's chosen HEX:
+    // <= 0% = one pale minimum tint
+    // 100% = the exact chosen HEX
+    // > 100% = gently darker, capped so colours never collapse into black.
+    let mixWithWhite = 0;
+    let mixWithBlack = 0;
 
-    let s;
-    let l;
-
-    if (value < 0) {
-      // Negative percentages continue past 0% by becoming even paler rather
-      // than switching to an unrelated red. Large misses remain distinguishable.
-      const intensity = 1 - Math.exp(-Math.abs(value) / 110);
-      s = paleS + (0.20 - paleS) * intensity;
-      l = paleL + (0.97 - paleL) * intensity;
-    } else if (value <= 100) {
-      const progress = Math.pow(value / 100, 0.92);
-      s = paleS + (baseS - paleS) * progress;
-      l = paleL + (targetL - paleL) * progress;
-    } else {
-      // Overachievement keeps moving darker, but only within a safe band.
-      // This preserves separation between e.g. blue, purple and burgundy even
-      // for very large values instead of turning all of them almost black.
-      const intensity = 1 - Math.exp(-(value - 100) / 180);
-      const darkFloor = Math.max(0.24, targetL - 0.16);
-      s = baseS + (Math.min(1, baseS + 0.08) - baseS) * intensity;
-      l = targetL + (darkFloor - targetL) * intensity;
+    if (value <= 0) {
+      mixWithWhite = 0.86;
+    } else if (value < 100) {
+      const progress = value / 100;
+      // Linear movement from a pale tint to the exact base colour.
+      mixWithWhite = 0.86 * (1 - progress);
+    } else if (value > 100) {
+      const overIntensity = 1 - Math.exp(-(value - 100) / 110);
+      mixWithBlack = 0.22 * overIntensity;
     }
 
-    const out = hslToRgb(hsl.h, clamp(s, 0, 1), clamp(l, 0, 1));
-    return { ...out, lightness: l };
+    const r = Math.round((base.r * (1 - mixWithWhite) + 255 * mixWithWhite) * (1 - mixWithBlack));
+    const g = Math.round((base.g * (1 - mixWithWhite) + 255 * mixWithWhite) * (1 - mixWithBlack));
+    const b = Math.round((base.b * (1 - mixWithWhite) + 255 * mixWithWhite) * (1 - mixWithBlack));
+
+    // Perceived luminance is used only to choose readable text colour.
+    const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+    return { r, g, b, luminance };
   }
 
   function colorForPercent(hex, percent) {
@@ -1635,7 +1625,7 @@
 
   function textColorForPercent(hex, percent) {
     const shade = getPercentShade(hex, percent);
-    return shade.lightness >= 0.68 ? "rgba(17, 19, 25, 0.82)" : "rgba(255, 255, 255, 0.88)";
+    return shade.luminance >= 0.62 ? "rgba(17, 19, 25, 0.86)" : "rgba(255, 255, 255, 0.92)";
   }
 
   function exportData() {
