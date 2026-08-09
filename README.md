@@ -1,8 +1,8 @@
-# L manager v0.4.0
+# L manager v0.4.1
 
 Local-first habit tracker built with plain HTML, CSS and JavaScript.
 
-## v0.4.0
+## v0.4.1
 - Reworked habit color selection into a larger, clearer color picker.
 - Added direct HEX entry with live preview (`#7C5CFC`, `7C5CFC`, and short `#ABC` formats are accepted).
 - Added a quick preset palette for common colors.

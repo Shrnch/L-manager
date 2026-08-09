@@ -2,7 +2,7 @@
   "use strict";
 
   const STORAGE_KEY = "l-manager:data:v1";
-  const APP_VERSION = "0.4.0";
+  const APP_VERSION = "0.4.1";
 
   const I18N = {
     en: {
