@@ -266,6 +266,11 @@ button { color: inherit; }
   z-index: -1;
 }
 
+.day-cell.has-entry .day-number,
+.day-cell.has-entry .day-percent,
+.day-cell.has-entry .day-value { color: var(--entry-fg, rgba(255,255,255,.88)); }
+.day-cell.has-entry .day-note-dot { background: var(--entry-fg, rgba(255,255,255,.88)); }
+
 .day-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
 .day-number { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.75); font-variant-numeric: tabular-nums; }
 .day-note-dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,0.8); margin-top: 3px; }

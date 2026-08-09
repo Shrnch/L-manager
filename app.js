@@ -2,7 +2,7 @@
   "use strict";
 
   const STORAGE_KEY = "l-manager:data:v1";
-  const APP_VERSION = "0.4.2";
+  const APP_VERSION = "0.4.3";
 
   const I18N = {
     en: {
@@ -491,7 +491,8 @@
     if (entry) {
       const percent = getEntryPercent(habit, entry);
       const bg = colorForPercent(habit.color, percent);
-      style = `--entry-bg:${bg};`;
+      const fg = textColorForPercent(habit.color, percent);
+      style = `--entry-bg:${bg}; --entry-fg:${fg};`;
       const valueText = habit.trackingType === "percent"
         ? t("manual")
         : habit.trackingType === "boolean"
@@ -1402,50 +1403,55 @@
       .map(([key, entry]) => ({ dateKey: key.split("::")[1], entry }));
   }
 
-  function colorForPercent(hex, percent) {
+  function getPercentShade(hex, percent) {
     const rgb = hexToRgb(hex) || { r: 124, g: 92, b: 252 };
+    const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
     const value = Number.isFinite(Number(percent)) ? Number(percent) : 0;
 
-    // Below 0% is a real continuation of the scale, not a floor.
-    // Move progressively toward a shared failure red while increasing opacity,
-    // so -20%, -100% and -300% remain visually distinct from 0% and each other.
+    // Keep every habit recognisably its own hue, like the original spreadsheet:
+    // low completion is a pale tint and higher completion becomes progressively
+    // darker / richer. The dark end is deliberately capped so different habit
+    // colours never collapse into near-black.
+    const baseS = clamp(hsl.s, 0.55, 0.96);
+    const targetL = clamp(hsl.l, 0.34, 0.58);
+    const paleL = 0.90;
+    const paleS = Math.max(0.32, baseS * 0.58);
+
+    let s;
+    let l;
+
     if (value < 0) {
-      const magnitude = -value;
-      const intensity = 1 - Math.exp(-magnitude / 90);
-      const failure = { r: 255, g: 67, b: 91 };
-      const mix = 0.22 + 0.66 * intensity;
-      const alpha = 0.26 + 0.68 * intensity;
-      const r = Math.round(rgb.r + (failure.r - rgb.r) * mix);
-      const g = Math.round(rgb.g + (failure.g - rgb.g) * mix);
-      const b = Math.round(rgb.b + (failure.b - rgb.b) * mix);
-      return `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(3)})`;
+      // Negative percentages continue past 0% by becoming even paler rather
+      // than switching to an unrelated red. Large misses remain distinguishable.
+      const intensity = 1 - Math.exp(-Math.abs(value) / 110);
+      s = paleS + (0.20 - paleS) * intensity;
+      l = paleL + (0.97 - paleL) * intensity;
+    } else if (value <= 100) {
+      const progress = Math.pow(value / 100, 0.92);
+      s = paleS + (baseS - paleS) * progress;
+      l = paleL + (targetL - paleL) * progress;
+    } else {
+      // Overachievement keeps moving darker, but only within a safe band.
+      // This preserves separation between e.g. blue, purple and burgundy even
+      // for very large values instead of turning all of them almost black.
+      const intensity = 1 - Math.exp(-(value - 100) / 180);
+      const darkFloor = Math.max(0.24, targetL - 0.16);
+      s = baseS + (Math.min(1, baseS + 0.08) - baseS) * intensity;
+      l = targetL + (darkFloor - targetL) * intensity;
     }
 
-    if (value <= 100) {
-      const progress = value / 100;
-      // sqrt makes small positive values visibly different from 0% instead of
-      // spending most of the low end in nearly indistinguishable dark shades.
-      const visibleProgress = Math.sqrt(progress);
-      const alpha = value === 0 ? 0.12 : 0.18 + visibleProgress * 0.52;
-      const darken = value === 0 ? 0.68 : 0.70 + visibleProgress * 0.30;
-      const r = Math.round(rgb.r * darken);
-      const g = Math.round(rgb.g * darken);
-      const b = Math.round(rgb.b * darken);
-      return `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(3)})`;
-    }
+    const out = hslToRgb(hsl.h, clamp(s, 0, 1), clamp(l, 0, 1));
+    return { ...out, lightness: l };
+  }
 
-    // 100% is the habit's base color. Above target, progressively brighten it
-    // toward white instead of collapsing every overachievement into one shade.
-    // The exponential curve keeps the scale useful even for 200%, 300%, 500%+.
-    const over = value - 100;
-    const intensity = 1 - Math.exp(-over / 125);
-    const whiteMix = 0.58 * intensity;
-    const alpha = 0.70 + 0.26 * intensity;
-    const r = Math.round(rgb.r + (255 - rgb.r) * whiteMix);
-    const g = Math.round(rgb.g + (255 - rgb.g) * whiteMix);
-    const b = Math.round(rgb.b + (255 - rgb.b) * whiteMix);
+  function colorForPercent(hex, percent) {
+    const shade = getPercentShade(hex, percent);
+    return `rgb(${shade.r}, ${shade.g}, ${shade.b})`;
+  }
 
-    return `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(3)})`;
+  function textColorForPercent(hex, percent) {
+    const shade = getPercentShade(hex, percent);
+    return shade.lightness >= 0.68 ? "rgba(17, 19, 25, 0.82)" : "rgba(255, 255, 255, 0.88)";
   }
 
   function exportData() {
@@ -1580,6 +1586,52 @@
     }
     if (/^[0-9a-fA-F]{6}$/.test(text)) return `#${text.toUpperCase()}`;
     return null;
+  }
+
+  function rgbToHsl(r, g, b) {
+    const rn = r / 255;
+    const gn = g / 255;
+    const bn = b / 255;
+    const max = Math.max(rn, gn, bn);
+    const min = Math.min(rn, gn, bn);
+    const delta = max - min;
+    let h = 0;
+    const l = (max + min) / 2;
+    const s = delta === 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
+
+    if (delta !== 0) {
+      if (max === rn) h = ((gn - bn) / delta) % 6;
+      else if (max === gn) h = (bn - rn) / delta + 2;
+      else h = (rn - gn) / delta + 4;
+      h /= 6;
+      if (h < 0) h += 1;
+    }
+    return { h, s, l };
+  }
+
+  function hslToRgb(h, s, l) {
+    const hueToRgb = (p, q, t) => {
+      let value = t;
+      if (value < 0) value += 1;
+      if (value > 1) value -= 1;
+      if (value < 1 / 6) return p + (q - p) * 6 * value;
+      if (value < 1 / 2) return q;
+      if (value < 2 / 3) return p + (q - p) * (2 / 3 - value) * 6;
+      return p;
+    };
+
+    if (s === 0) {
+      const gray = Math.round(l * 255);
+      return { r: gray, g: gray, b: gray };
+    }
+
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    return {
+      r: Math.round(hueToRgb(p, q, h + 1 / 3) * 255),
+      g: Math.round(hueToRgb(p, q, h) * 255),
+      b: Math.round(hueToRgb(p, q, h - 1 / 3) * 255),
+    };
   }
 
   function hexToRgb(hex) {

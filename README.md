@@ -1,15 +1,13 @@
-# L manager v0.4.2
+# L manager v0.4.3
 
 Local-first habit tracker built with plain HTML, CSS and JavaScript.
 
-## v0.4.2
-- Fixed Show percentages in the day-entry modal: numeric values and Yes/No remain visible while calculated percentages are hidden.
-- Reworked habit color selection into a larger, clearer color picker.
-- Added direct HEX entry with live preview (`#7C5CFC`, `7C5CFC`, and short `#ABC` formats are accepted).
-- Added a quick preset palette for common colors.
-- Native color picker, HEX field, preview, and presets stay synchronized.
-- Selected preset is highlighted and invalid HEX input is visibly marked.
-- Existing habit colors and saved data remain compatible.
+## v0.4.3
+- Reworked completion shades to match the original spreadsheet logic: better results are progressively darker/richer versions of the habit color.
+- 0–100% now runs from a pale tint to a strong habit-colored shade.
+- Values above 100% continue darker without collapsing into black; a lightness floor keeps different habit hues distinguishable.
+- Values below 0% continue in the opposite direction as progressively paler tints.
+- Calendar text automatically switches between dark and light for contrast on pale/dark cells.
 
 ## Run
 Open `index.html` directly or run `start.bat` on Windows.
