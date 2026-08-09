@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="dark" />
-  <title>l-manager — v0.5.3</title>
+  <title>l-manager — v0.5.4</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -284,6 +284,13 @@
           <div class="value-input-wrap">
             <input id="entryValue" type="number" min="0" step="any" placeholder="0" required />
             <span id="entryUnitBadge" class="input-unit"></span>
+          </div>
+          <div class="entry-value-slider" id="entryValueSliderWrap">
+            <input id="entryValueSlider" type="range" min="0" max="100" step="1" value="0" />
+            <div class="entry-slider-scale" aria-hidden="true">
+              <span id="entrySliderMin">0</span>
+              <span id="entrySliderMax">100</span>
+            </div>
           </div>
         </label>
 

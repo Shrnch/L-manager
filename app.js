@@ -3,7 +3,7 @@
 
   const STORAGE_KEY = "l-manager:data:v1";
   const MIGRATION_BACKUP_KEY = "l-manager:data:backup:pre-sleep-v0.5.1";
-  const APP_VERSION = "0.5.3";
+  const APP_VERSION = "0.5.4";
 
   const I18N = {
     en: {
@@ -173,6 +173,10 @@
     entryValueLabel: document.querySelector("#entryValueLabel"),
     entryValue: document.querySelector("#entryValue"),
     entryUnitBadge: document.querySelector("#entryUnitBadge"),
+    entryValueSliderWrap: document.querySelector("#entryValueSliderWrap"),
+    entryValueSlider: document.querySelector("#entryValueSlider"),
+    entrySliderMin: document.querySelector("#entrySliderMin"),
+    entrySliderMax: document.querySelector("#entrySliderMax"),
     sleepEntry: document.querySelector("#sleepEntry"),
     entryBedtime: document.querySelector("#entryBedtime"),
     entryWakeTime: document.querySelector("#entryWakeTime"),
@@ -375,7 +379,15 @@
     els.habitForm.addEventListener("submit", saveHabitFromForm);
     els.deleteHabitBtn.addEventListener("click", deleteCurrentHabit);
 
-    els.entryValue.addEventListener("input", updateEntryPreview);
+    els.entryValue.addEventListener("input", () => {
+      syncEntrySliderFromValue();
+      updateEntryPreview();
+    });
+    els.entryValueSlider.addEventListener("input", () => {
+      els.entryValue.value = String(Math.round(Number(els.entryValueSlider.value) || 0));
+      updateEntrySliderFill();
+      updateEntryPreview();
+    });
     els.entryBedtime.addEventListener("input", updateEntryPreview);
     els.entryWakeTime.addEventListener("input", updateEntryPreview);
     [els.entryYesBtn, els.entryNoBtn].forEach((button) => {
@@ -1330,6 +1342,7 @@
     els.entryNote.value = entry?.note || "";
     els.clearEntryBtn.hidden = !entry;
     syncEntryTrackingFields(habit);
+    configureEntrySlider(habit, entry?.value);
     els.booleanEntry.dataset.value = habit.trackingType === "boolean" && entry ? String(Number(entry.value) === 1 ? 1 : 0) : "";
     syncBooleanButtons();
 
@@ -1357,6 +1370,7 @@
 
     els.entryValueField.hidden = isBoolean || isSleep;
     els.entryValueField.style.display = isBoolean || isSleep ? "none" : "flex";
+    els.entryValueSliderWrap.hidden = isBoolean || isSleep;
     els.entryValue.required = !isBoolean && !isSleep;
 
     els.booleanEntry.hidden = !isBoolean;
@@ -1366,6 +1380,67 @@
     els.sleepEntry.style.display = isSleep ? "grid" : "none";
     els.entryBedtime.required = isSleep;
     els.entryWakeTime.required = isSleep;
+  }
+
+  function configureEntrySlider(habit, currentValue = null) {
+    if (!habit || habit.trackingType === "boolean" || habit.trackingType === "sleep") return;
+
+    const current = Number(currentValue);
+    const finiteCurrent = Number.isFinite(current) && current >= 0 ? current : 0;
+    let max;
+
+    if (habit.trackingType === "percent") {
+      max = Math.max(500, niceSliderMax(finiteCurrent));
+    } else {
+      const target = Math.max(0, Number(habit.target) || 0);
+      const multiplier = habit.negativeHabit ? 6 : 2;
+      max = niceSliderMax(Math.max(10, target * multiplier, finiteCurrent));
+    }
+
+    els.entryValueSlider.min = "0";
+    els.entryValueSlider.max = String(max);
+    els.entryValueSlider.step = "1";
+    els.entrySliderMin.textContent = "0";
+    els.entrySliderMax.textContent = formatNumber(max);
+    syncEntrySliderFromValue();
+  }
+
+  function niceSliderMax(value) {
+    const safe = Math.max(1, Number(value) || 1);
+    const power = 10 ** Math.floor(Math.log10(safe));
+    const normalized = safe / power;
+    const nice = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10;
+    return Math.ceil(nice * power);
+  }
+
+  function syncEntrySliderFromValue() {
+    const habit = state.habits.find((item) => item.id === els.entryHabitId.value);
+    if (!habit || habit.trackingType === "boolean" || habit.trackingType === "sleep") return;
+
+    const raw = Number(els.entryValue.value);
+    if (!Number.isFinite(raw) || raw < 0) {
+      els.entryValueSlider.value = "0";
+      updateEntrySliderFill();
+      return;
+    }
+
+    let max = Number(els.entryValueSlider.max) || 100;
+    if (raw > max) {
+      max = niceSliderMax(raw);
+      els.entryValueSlider.max = String(max);
+      els.entrySliderMax.textContent = formatNumber(max);
+    }
+
+    els.entryValueSlider.value = String(Math.round(raw));
+    updateEntrySliderFill();
+  }
+
+  function updateEntrySliderFill() {
+    const min = Number(els.entryValueSlider.min) || 0;
+    const max = Number(els.entryValueSlider.max) || 100;
+    const value = Number(els.entryValueSlider.value) || 0;
+    const progress = max > min ? ((value - min) / (max - min)) * 100 : 0;
+    els.entryValueSlider.style.setProperty("--slider-progress", `${clamp(progress, 0, 100)}%`);
   }
 
   function setBooleanEntry(value) {
