@@ -3,7 +3,7 @@
 
   const STORAGE_KEY = "l-manager:data:v1";
   const MIGRATION_BACKUP_KEY = "l-manager:data:backup:pre-sleep-v0.5.1";
-  const APP_VERSION = "0.6.0";
+  const APP_VERSION = "0.6.2";
 
   const I18N = {
     en: {
@@ -188,9 +188,6 @@
     clearEntryBtn: document.querySelector("#clearEntryBtn"),
     toast: document.querySelector("#toast"),
   };
-
-  bindEvents();
-  render();
 
   function createDefaultSleepHabit(language = "ru") {
     return {
@@ -398,25 +395,41 @@
 
     els.exportBtn.addEventListener("click", exportData);
     els.importInput.addEventListener("change", importData);
-    els.visualHabitSelect.addEventListener("change", () => {
-      selectedHabitId = els.visualHabitSelect.value;
+
+    // Visualization is highly dynamic: its options, overlay list and comparison rows
+    // are rebuilt during rendering. Delegate interaction handling to the stable panel
+    // so controls keep working regardless of which descendants were re-rendered.
+    els.insightsPanel.addEventListener("change", handleInsightsChange);
+    els.insightsPanel.addEventListener("click", handleInsightsClick);
+  }
+
+  function handleInsightsChange(event) {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+
+    if (target.matches("#visualHabitSelect")) {
+      selectedHabitId = target.value;
       renderInsights();
       syncSelectedHabitCard();
-    });
+      return;
+    }
 
-    els.relationHabitA.addEventListener("change", () => {
-      relationHabitAId = els.relationHabitA.value;
+    if (target.matches("#relationHabitA")) {
+      relationHabitAId = target.value;
       ensureRelationHabits();
       renderRelations();
-    });
-    els.relationHabitB.addEventListener("change", () => {
-      relationHabitBId = els.relationHabitB.value;
+      return;
+    }
+
+    if (target.matches("#relationHabitB")) {
+      relationHabitBId = target.value;
       ensureRelationHabits();
       renderRelations();
-    });
-    els.relationOverlayList.addEventListener("change", (event) => {
-      const checkbox = event.target.closest("input[type=checkbox][data-overlay-habit]");
-      if (!checkbox) return;
+      return;
+    }
+
+    const checkbox = target.closest("input[type=checkbox][data-overlay-habit]");
+    if (checkbox) {
       const habitId = checkbox.dataset.overlayHabit;
       relationOverlayInitialized = true;
       if (checkbox.checked) {
@@ -426,13 +439,26 @@
       }
       ensureRelationHabits();
       renderRelations();
-    });
-    [els.relationOverlayBtn, els.relationScatterBtn].forEach((button) => {
-      button.addEventListener("click", () => {
-        relationMode = button.dataset.relationMode;
-        renderRelations();
-      });
-    });
+    }
+  }
+
+  function handleInsightsClick(event) {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+
+    const modeButton = target.closest("[data-relation-mode]");
+    if (modeButton) {
+      relationMode = modeButton.dataset.relationMode === "scatter" ? "scatter" : "overlay";
+      renderRelations();
+      return;
+    }
+
+    const comparisonButton = target.closest("[data-comparison-habit]");
+    if (comparisonButton) {
+      selectedHabitId = comparisonButton.dataset.comparisonHabit;
+      renderInsights();
+      syncSelectedHabitCard();
+    }
   }
 
   function render() {
@@ -626,13 +652,6 @@
     els.habitTrendChart.innerHTML = renderTrendChart(habit, viewDate);
     renderRelations();
     els.habitComparison.innerHTML = renderHabitComparison(viewDate);
-    els.habitComparison.querySelectorAll("[data-comparison-habit]").forEach((button) => {
-      button.addEventListener("click", () => {
-        selectedHabitId = button.dataset.comparisonHabit;
-        renderInsights();
-        syncSelectedHabitCard();
-      });
-    });
   }
 
   function renderAllHabitsHeatmap(date) {
@@ -1940,4 +1959,15 @@
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
   }
+
+  // Start only after every helper in this script has been initialized.
+  // This prevents the first render after a hard refresh from running against
+  // a partially initialized module; month navigation was masking this by
+  // triggering a later render.
+  bindEvents();
+  requestAnimationFrame(() => {
+    viewDate = startOfMonth(new Date());
+    ensureSelectedHabit();
+    render();
+  });
 })();
