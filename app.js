@@ -3,7 +3,7 @@
 
   const STORAGE_KEY = "l-manager:data:v1";
   const MIGRATION_BACKUP_KEY = "l-manager:data:backup:pre-sleep-v0.5.1";
-  const APP_VERSION = "0.6.4";
+  const APP_VERSION = "0.6.5";
 
   const I18N = {
     en: {
@@ -808,6 +808,17 @@
       ? `<polyline points="${segment.join(" ")}" fill="none" stroke="${habit.color}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />`
       : "").join("");
 
+    // Keep the trend visually continuous across missing days, but make those
+    // inferred connections faint so a skipped day is still obvious.
+    const trackedPoints = values
+      .map((value, index) => ({ value, index }))
+      .filter((point) => point.value != null && Number.isFinite(point.value));
+    const gapBridges = trackedPoints.slice(1).map((point, pointIndex) => {
+      const previous = trackedPoints[pointIndex];
+      if (point.index - previous.index <= 1) return "";
+      return `<line x1="${xFor(previous.index).toFixed(2)}" y1="${yFor(previous.value).toFixed(2)}" x2="${xFor(point.index).toFixed(2)}" y2="${yFor(point.value).toFixed(2)}" stroke="${habit.color}" stroke-width="2.4" stroke-linecap="round" opacity="0.28" />`;
+    }).join("");
+
     const points = values.map((value, index) => {
       if (value == null || !Number.isFinite(value)) return "";
       const x = xFor(index);
@@ -828,6 +839,7 @@
     return `
       <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(t("dailyPercentageTrend", { name: habit.name }))}">
         ${grids}
+        ${gapBridges}
         ${lines}
         ${points}
         ${xLabels}
