@@ -3,7 +3,7 @@
 
   const STORAGE_KEY = "l-manager:data:v1";
   const MIGRATION_BACKUP_KEY = "l-manager:data:backup:pre-sleep-v0.5.1";
-  const APP_VERSION = "0.6.2";
+  const APP_VERSION = "0.6.4";
 
   const I18N = {
     en: {
@@ -380,11 +380,13 @@
       syncEntrySliderFromValue();
       updateEntryPreview();
     });
-    els.entryValueSlider.addEventListener("input", () => {
-      els.entryValue.value = String(Math.round(Number(els.entryValueSlider.value) || 0));
-      updateEntrySliderFill();
-      updateEntryPreview();
-    });
+    if (els.entryValueSlider) {
+      els.entryValueSlider.addEventListener("input", () => {
+        els.entryValue.value = String(Math.round(Number(els.entryValueSlider.value) || 0));
+        updateEntrySliderFill();
+        updateEntryPreview();
+      });
+    }
     els.entryBedtime.addEventListener("input", updateEntryPreview);
     els.entryWakeTime.addEventListener("input", updateEntryPreview);
     [els.entryYesBtn, els.entryNoBtn].forEach((button) => {
@@ -1389,7 +1391,7 @@
 
     els.entryValueField.hidden = isBoolean || isSleep;
     els.entryValueField.style.display = isBoolean || isSleep ? "none" : "flex";
-    els.entryValueSliderWrap.hidden = isBoolean || isSleep;
+    if (els.entryValueSliderWrap) els.entryValueSliderWrap.hidden = isBoolean || isSleep;
     els.entryValue.required = !isBoolean && !isSleep;
 
     els.booleanEntry.hidden = !isBoolean;
@@ -1402,7 +1404,7 @@
   }
 
   function configureEntrySlider(habit, currentValue = null) {
-    if (!habit || habit.trackingType === "boolean" || habit.trackingType === "sleep") return;
+    if (!habit || habit.trackingType === "boolean" || habit.trackingType === "sleep" || !els.entryValueSlider || !els.entrySliderMin || !els.entrySliderMax) return;
 
     const current = Number(currentValue);
     const finiteCurrent = Number.isFinite(current) && current >= 0 ? current : 0;
@@ -1434,7 +1436,7 @@
 
   function syncEntrySliderFromValue() {
     const habit = state.habits.find((item) => item.id === els.entryHabitId.value);
-    if (!habit || habit.trackingType === "boolean" || habit.trackingType === "sleep") return;
+    if (!habit || habit.trackingType === "boolean" || habit.trackingType === "sleep" || !els.entryValueSlider || !els.entrySliderMax) return;
 
     const raw = Number(els.entryValue.value);
     if (!Number.isFinite(raw) || raw < 0) {
@@ -1455,6 +1457,7 @@
   }
 
   function updateEntrySliderFill() {
+    if (!els.entryValueSlider) return;
     const min = Number(els.entryValueSlider.min) || 0;
     const max = Number(els.entryValueSlider.max) || 100;
     const value = Number(els.entryValueSlider.value) || 0;
@@ -1960,14 +1963,20 @@
       .replaceAll("'", "&#039;");
   }
 
-  // Start only after every helper in this script has been initialized.
-  // This prevents the first render after a hard refresh from running against
-  // a partially initialized module; month navigation was masking this by
-  // triggering a later render.
-  bindEvents();
-  requestAnimationFrame(() => {
+  // The script is loaded at the end of <body>, so all required DOM nodes already exist.
+  // Render synchronously: deferring the first paint via requestAnimationFrame could leave
+  // the app shell visible but the actual tracker empty until another interaction re-rendered it.
+  function initializeAppView() {
     viewDate = startOfMonth(new Date());
     ensureSelectedHabit();
     render();
+  }
+
+  bindEvents();
+  initializeAppView();
+
+  // Also refresh the view when the page is restored from the browser's page cache.
+  window.addEventListener("pageshow", (event) => {
+    if (event.persisted) initializeAppView();
   });
 })();
