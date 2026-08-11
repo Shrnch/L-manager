@@ -3,7 +3,7 @@
 
   const STORAGE_KEY = "l-manager:data:v1";
   const MIGRATION_BACKUP_KEY = "l-manager:data:backup:pre-sleep-v0.5.1";
-  const APP_VERSION = "0.6.5";
+  const APP_VERSION = "0.6.6";
 
   const I18N = {
     en: {
@@ -98,14 +98,15 @@
   }
 
   const state = loadState();
+  const restoredUiState = normalizeUiState(state.settings?.uiState);
   let viewDate = startOfMonth(new Date());
   let toastTimer = null;
-  let selectedHabitId = null;
-  let relationHabitAId = null;
-  let relationHabitBId = null;
-  let relationOverlayHabitIds = [];
-  let relationOverlayInitialized = false;
-  let relationMode = "overlay";
+  let selectedHabitId = restoredUiState.selectedHabitId;
+  let relationHabitAId = restoredUiState.relationHabitAId;
+  let relationHabitBId = restoredUiState.relationHabitBId;
+  let relationOverlayHabitIds = [...restoredUiState.relationOverlayHabitIds];
+  let relationOverlayInitialized = restoredUiState.relationOverlayInitialized;
+  let relationMode = restoredUiState.relationMode;
 
   const els = {
     habitList: document.querySelector("#habitList"),
@@ -211,8 +212,37 @@
       version: APP_VERSION,
       habits: [createDefaultSleepHabit("ru")],
       entries: {},
-      settings: { showPercentages: true, language: "ru", sleepFeatureInitialized: true },
+      settings: {
+        showPercentages: true,
+        language: "ru",
+        sleepFeatureInitialized: true,
+        uiState: normalizeUiState(null),
+      },
     };
+  }
+
+  function normalizeUiState(value) {
+    const source = value && typeof value === "object" ? value : {};
+    return {
+      selectedHabitId: typeof source.selectedHabitId === "string" ? source.selectedHabitId : null,
+      relationHabitAId: typeof source.relationHabitAId === "string" ? source.relationHabitAId : null,
+      relationHabitBId: typeof source.relationHabitBId === "string" ? source.relationHabitBId : null,
+      relationOverlayHabitIds: Array.isArray(source.relationOverlayHabitIds)
+        ? source.relationOverlayHabitIds.filter((id) => typeof id === "string")
+        : [],
+      relationOverlayInitialized: source.relationOverlayInitialized === true,
+      relationMode: source.relationMode === "scatter" ? "scatter" : "overlay",
+    };
+  }
+
+  function restoreUiStateFromSettings() {
+    const saved = normalizeUiState(state.settings?.uiState);
+    selectedHabitId = saved.selectedHabitId;
+    relationHabitAId = saved.relationHabitAId;
+    relationHabitBId = saved.relationHabitBId;
+    relationOverlayHabitIds = [...saved.relationOverlayHabitIds];
+    relationOverlayInitialized = saved.relationOverlayInitialized;
+    relationMode = saved.relationMode;
   }
 
   function loadState() {
@@ -272,6 +302,7 @@
           showPercentages: parsed.settings?.showPercentages !== false,
           language,
           sleepFeatureInitialized: true,
+          uiState: normalizeUiState(parsed.settings?.uiState),
         },
       };
       if (migrated || parsed.version !== APP_VERSION) {
@@ -286,6 +317,15 @@
 
   function saveState() {
     state.version = APP_VERSION;
+    state.settings = state.settings || {};
+    state.settings.uiState = {
+      selectedHabitId,
+      relationHabitAId,
+      relationHabitBId,
+      relationOverlayHabitIds: [...relationOverlayHabitIds],
+      relationOverlayInitialized,
+      relationMode,
+    };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }
 
@@ -411,6 +451,7 @@
 
     if (target.matches("#visualHabitSelect")) {
       selectedHabitId = target.value;
+      saveState();
       renderInsights();
       syncSelectedHabitCard();
       return;
@@ -419,6 +460,7 @@
     if (target.matches("#relationHabitA")) {
       relationHabitAId = target.value;
       ensureRelationHabits();
+      saveState();
       renderRelations();
       return;
     }
@@ -426,6 +468,7 @@
     if (target.matches("#relationHabitB")) {
       relationHabitBId = target.value;
       ensureRelationHabits();
+      saveState();
       renderRelations();
       return;
     }
@@ -440,6 +483,7 @@
         relationOverlayHabitIds = relationOverlayHabitIds.filter((id) => id !== habitId);
       }
       ensureRelationHabits();
+      saveState();
       renderRelations();
     }
   }
@@ -451,6 +495,7 @@
     const modeButton = target.closest("[data-relation-mode]");
     if (modeButton) {
       relationMode = modeButton.dataset.relationMode === "scatter" ? "scatter" : "overlay";
+      saveState();
       renderRelations();
       return;
     }
@@ -458,6 +503,7 @@
     const comparisonButton = target.closest("[data-comparison-habit]");
     if (comparisonButton) {
       selectedHabitId = comparisonButton.dataset.comparisonHabit;
+      saveState();
       renderInsights();
       syncSelectedHabitCard();
     }
@@ -503,6 +549,7 @@
     els.habitList.querySelectorAll("[data-view-habit]").forEach((button) => {
       button.addEventListener("click", () => {
         selectedHabitId = button.dataset.viewHabit;
+        saveState();
         renderInsights();
         syncSelectedHabitCard();
       });
@@ -778,9 +825,17 @@
     const innerW = width - pad.left - pad.right;
     const innerH = height - pad.top - pad.bottom;
     const xFor = (index) => pad.left + (days === 1 ? 0 : (index / (days - 1)) * innerW);
+    const invertYAxis = habit.trackingType === "target" && Boolean(habit.negativeHabit);
     const yFor = (value) => {
       const clamped = Math.max(yMin, Math.min(value, yMax));
-      return pad.top + innerH - ((clamped - yMin) / (yMax - yMin)) * innerH;
+      const normalized = (clamped - yMin) / (yMax - yMin);
+      // Negative numeric habits are expressed as a success percentage where a
+      // smaller real-world value produces a larger percentage. Flip only the
+      // visual Y direction so the chart still follows the underlying quantity:
+      // e.g. 1.5 h / 100% sits below 4.5 h / -100%.
+      return invertYAxis
+        ? pad.top + normalized * innerH
+        : pad.top + innerH - normalized * innerH;
     };
 
     const tickValues = [...new Set([yMin, 0, 100, yMax])].sort((a, b) => a - b);
@@ -1023,8 +1078,8 @@
   function renderRelationOverlayMulti(habits, date) {
     const width = 336;
     const height = 205;
-    const pad = { left: 34, right: 10, top: 20, bottom: 25 };
     const days = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+    const isNegativeNumericHabit = (habit) => habit.trackingType === "target" && Boolean(habit.negativeHabit);
     const series = habits.map((habit) => {
       const values = [];
       for (let day = 1; day <= days; day += 1) {
@@ -1034,26 +1089,65 @@
       }
       return { habit, values };
     });
+
+    const hasNegative = habits.some(isNegativeNumericHabit);
+    const hasPositive = habits.some((habit) => !isNegativeNumericHabit(habit));
+    const mixedDirections = hasNegative && hasPositive;
+    const pad = { left: 34, right: mixedDirections ? 34 : 10, top: 20, bottom: 25 };
+
     const finite = series.flatMap((item) => item.values).filter((value) => value != null && Number.isFinite(value));
-    const highest = finite.length ? Math.max(...finite, 100) : 100;
-    const lowest = finite.length ? Math.min(...finite, 0) : 0;
-    const yMax = Math.max(100, Math.ceil(highest / 50) * 50);
-    const yMin = Math.min(0, Math.floor(lowest / 50) * 50);
+    let yMax;
+    let yMin;
+    if (mixedDirections) {
+      // A mixed overlay needs one geometric plot area but two visual directions.
+      // Keep it symmetric around zero so the left axis can describe ordinary
+      // habits and the right axis can describe negative habits without either
+      // series being mirrored when another type is selected.
+      const magnitude = finite.length ? Math.max(100, ...finite.map((value) => Math.abs(value))) : 100;
+      const bound = Math.max(100, Math.ceil(magnitude / 50) * 50);
+      yMin = -bound;
+      yMax = bound;
+    } else {
+      const highest = finite.length ? Math.max(...finite, 100) : 100;
+      const lowest = finite.length ? Math.min(...finite, 0) : 0;
+      yMax = Math.max(100, Math.ceil(highest / 50) * 50);
+      yMin = Math.min(0, Math.floor(lowest / 50) * 50);
+    }
+
     const innerW = width - pad.left - pad.right;
     const innerH = height - pad.top - pad.bottom;
     const xFor = (index) => pad.left + (days === 1 ? 0 : (index / (days - 1)) * innerW);
-    const yFor = (value) => {
+    const normalizeY = (value) => {
       const clamped = Math.max(yMin, Math.min(value, yMax));
-      return pad.top + innerH - ((clamped - yMin) / (yMax - yMin)) * innerH;
+      return (clamped - yMin) / (yMax - yMin);
     };
+    const yForPositive = (value) => pad.top + innerH - normalizeY(value) * innerH;
+    const yForNegative = (value) => pad.top + normalizeY(value) * innerH;
+    const yForHabit = (habit, value) => isNegativeNumericHabit(habit) ? yForNegative(value) : yForPositive(value);
 
-    const tickValues = [...new Set([yMin, 0, 100, yMax])].sort((a, b) => a - b);
+    let tickValues;
+    if (mixedDirections) {
+      tickValues = [...new Set([yMin, -100, 0, 100, yMax].filter((tick) => tick >= yMin && tick <= yMax))].sort((a, b) => a - b);
+    } else {
+      tickValues = [...new Set([yMin, 0, 100, yMax])].sort((a, b) => a - b);
+    }
+
     const grids = tickValues.map((tick) => {
-      const y = yFor(tick);
-      const isTarget = Math.abs(tick - 100) < 0.001;
-      return `<line x1="${pad.left}" y1="${y.toFixed(2)}" x2="${width - pad.right}" y2="${y.toFixed(2)}" class="chart-grid${isTarget ? " chart-target-line" : ""}" />
-        <text x="${pad.left - 7}" y="${(y + 3).toFixed(2)}" text-anchor="end" class="chart-axis-label">${formatPercent(tick)}%</text>`;
+      const y = hasNegative && !hasPositive ? yForNegative(tick) : yForPositive(tick);
+      const ordinaryTarget = !mixedDirections && Math.abs(tick - 100) < 0.001;
+      const rightLabel = mixedDirections ? -tick : null;
+      return `<line x1="${pad.left}" y1="${y.toFixed(2)}" x2="${width - pad.right}" y2="${y.toFixed(2)}" class="chart-grid${ordinaryTarget ? " chart-target-line" : ""}" />
+        <text x="${pad.left - 7}" y="${(y + 3).toFixed(2)}" text-anchor="end" class="chart-axis-label">${formatPercent(tick)}%</text>
+        ${mixedDirections ? `<text x="${width - pad.right + 7}" y="${(y + 3).toFixed(2)}" text-anchor="start" class="chart-axis-label">${formatPercent(rightLabel)}%</text>` : ""}`;
     }).join("");
+
+    // In a mixed chart 100% sits at opposite vertical positions depending on
+    // habit direction. Draw both target guides instead of pretending there is
+    // one shared 100% line.
+    const mixedTargetLines = mixedDirections
+      ? `<line x1="${pad.left}" y1="${yForPositive(100).toFixed(2)}" x2="${width - pad.right}" y2="${yForPositive(100).toFixed(2)}" class="chart-grid chart-target-line" />
+         <line x1="${pad.left}" y1="${yForNegative(100).toFixed(2)}" x2="${width - pad.right}" y2="${yForNegative(100).toFixed(2)}" class="chart-grid chart-target-line" />`
+      : "";
 
     const paths = series.map(({ habit, values }) => {
       const segments = [];
@@ -1062,14 +1156,16 @@
         if (value == null || !Number.isFinite(value)) {
           if (current.length) segments.push(current);
           current = [];
-        } else current.push(`${xFor(index).toFixed(2)},${yFor(value).toFixed(2)}`);
+        } else {
+          current.push(`${xFor(index).toFixed(2)},${yForHabit(habit, value).toFixed(2)}`);
+        }
       });
       if (current.length) segments.push(current);
       const lines = segments.map((segment) => segment.length > 1
         ? `<polyline points="${segment.join(" ")}" fill="none" stroke="${habit.color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".92" />`
         : "").join("");
       const points = values.map((value, index) => value == null || !Number.isFinite(value) ? "" :
-        `<circle cx="${xFor(index).toFixed(2)}" cy="${yFor(value).toFixed(2)}" r="2.5" fill="${habit.color}" stroke="#111319" stroke-width="1.2"><title>${escapeHtml(habit.name)} · ${t("day")} ${index + 1}: ${formatPercent(value)}%</title></circle>`).join("");
+        `<circle cx="${xFor(index).toFixed(2)}" cy="${yForHabit(habit, value).toFixed(2)}" r="2.5" fill="${habit.color}" stroke="#111319" stroke-width="1.2"><title>${escapeHtml(habit.name)} · ${t("day")} ${index + 1}: ${formatPercent(value)}%</title></circle>`).join("");
       return lines + points;
     }).join("");
 
@@ -1079,7 +1175,7 @@
 
     return `<div class="relation-chart-caption">${t("overlayCaption")}</div>
       <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(t("overlayAria"))}">
-        ${grids}${paths}${xLabels}${empty}
+        ${grids}${mixedTargetLines}${paths}${xLabels}${empty}
       </svg>`;
   }
 
@@ -1808,9 +1904,11 @@
         showPercentages: incoming.settings?.showPercentages !== false,
         language: importedLanguage,
         sleepFeatureInitialized: true,
+        uiState: normalizeUiState(incoming.settings?.uiState),
       };
-      relationOverlayHabitIds = [];
-      relationOverlayInitialized = false;
+      restoreUiStateFromSettings();
+      ensureSelectedHabit();
+      ensureRelationHabits();
       state.version = APP_VERSION;
       saveState();
       render();
@@ -1982,6 +2080,8 @@
     viewDate = startOfMonth(new Date());
     ensureSelectedHabit();
     render();
+    // Persist the restored (and, if needed, sanitized) Visualization selections.
+    saveState();
   }
 
   bindEvents();
