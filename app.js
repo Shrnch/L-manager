@@ -3,7 +3,7 @@
 
   const STORAGE_KEY = "l-manager:data:v1";
   const MIGRATION_BACKUP_KEY = "l-manager:data:backup:pre-sleep-v0.5.1";
-  const APP_VERSION = "0.6.6";
+  const APP_VERSION = "0.6.7";
 
   const I18N = {
     en: {
@@ -27,7 +27,7 @@
       newHabit: "New habit", editHabit: "Edit habit", hintPercent: "Enter the percentage directly. You can record 0%, 124%, 500%, or any other non-negative value.", hintBooleanNegative: "Negative habit: Yes still means a successful day. Phrase the habit as the desired state — for example “Do not smoke” → Yes.", hintBoolean: "Yes means a successful day; No means not completed.", hintTargetNegative: "Negative habit: the lower the actual value, the better. Daily target = 100%; below target gives more than 100%, above target gives less than 100%.", hintTarget: "Enter the actual value and the percentage is calculated automatically. The higher relative to target, the better; there is no upper limit.",
       targetMustPositive: "Daily target must be greater than 0", habitUpdated: "Habit updated", habitCreated: "Habit created", deleteConfirm: "Delete “{name}” and all its tracked days?", habitDeleted: "Habit deleted",
       percentage: "Percentage", actualResult: "Actual result", chooseYesNo: "Choose Yes or No", daySaved: "Day saved", dayCleared: "Day cleared", backupExported: "Backup exported", importConfirm: "Import will replace current L manager data. Continue?", backupImported: "Backup imported", importFailed: "Could not import this file",
-      language: "Language", chooseColor: "Choose color", quickColors: "Quick colors", sleep: "Sleep", sleepSettings: "Sleep settings", sleepSettingsHint: "Only the built-in Sleep habit uses these fields", sleepTargetDuration: "Target duration", targetBedtime: "Target bedtime", targetWakeTime: "Target wake-up", bedtime: "Bedtime", wakeUp: "Wake up", sleepDuration: "Sleep duration", sleepScore: "Sleep score", sleepInvalidTimes: "Choose both bedtime and wake-up", sleepMeta: "{hours} h target · {bedtime} → {wake}"
+      language: "Language", hideHabitInfo: "Hide habit info", showHabitInfo: "Show habit info", hideVisualizationPanel: "Hide visualization", showVisualizationPanel: "Show visualization", chooseColor: "Choose color", quickColors: "Quick colors", sleep: "Sleep", sleepSettings: "Sleep settings", sleepSettingsHint: "Only the built-in Sleep habit uses these fields", sleepTargetDuration: "Target duration", targetBedtime: "Target bedtime", targetWakeTime: "Target wake-up", bedtime: "Bedtime", wakeUp: "Wake up", sleepDuration: "Sleep duration", sleepScore: "Sleep score", sleepInvalidTimes: "Choose both bedtime and wake-up", sleepMeta: "{hours} h target · {bedtime} → {wake}"
     },
     ru: {
       habitTracker: "трекер привычек", updateDay: "Обновить день", export: "Экспорт", import: "Импорт", addHabit: "+ Привычка", previousMonth: "Предыдущий месяц", nextMonth: "Следующий месяц", today: "сегодня",
@@ -50,7 +50,7 @@
       newHabit: "Новая привычка", editHabit: "Редактировать привычку", hintPercent: "Вводишь процент напрямую. Можно записать 0%, 124%, 500% или любое другое неотрицательное значение.", hintBooleanNegative: "Негативная привычка: Да всё равно означает успешный день. Формулируй привычку как желаемое состояние — например «Не курить» → Да.", hintBoolean: "Да означает успешный день, Нет — невыполнение.", hintTargetNegative: "Негативная привычка: чем фактическое значение меньше, тем лучше. Дневная цель = 100%; ниже цели даёт больше 100%, выше цели — меньше 100%.", hintTarget: "Вводишь фактическое значение — процент считается автоматически. Чем больше относительно цели, тем лучше; верхнего лимита нет.",
       targetMustPositive: "Дневная цель должна быть больше 0", habitUpdated: "Привычка обновлена", habitCreated: "Привычка создана", deleteConfirm: "Удалить «{name}» и все заполненные дни?", habitDeleted: "Привычка удалена",
       percentage: "Процент", actualResult: "Фактический результат", chooseYesNo: "Выбери Да или Нет", daySaved: "День сохранён", dayCleared: "День очищен", backupExported: "Резервная копия экспортирована", importConfirm: "Импорт заменит текущие данные L manager. Продолжить?", backupImported: "Резервная копия импортирована", importFailed: "Не удалось импортировать файл",
-      language: "Язык", chooseColor: "Выбрать цвет", quickColors: "Быстрые цвета", sleep: "Сон", sleepSettings: "Настройки сна", sleepSettingsHint: "Эти поля используются только для встроенной привычки сна", sleepTargetDuration: "Целевая длительность", targetBedtime: "Цель отхода ко сну", targetWakeTime: "Цель подъёма", bedtime: "Лёг спать", wakeUp: "Проснулся", sleepDuration: "Длительность сна", sleepScore: "Оценка сна", sleepInvalidTimes: "Укажи время сна и пробуждения", sleepMeta: "цель {hours} ч · {bedtime} → {wake}"
+      language: "Язык", hideHabitInfo: "Скрыть информацию привычек", showHabitInfo: "Показать информацию привычек", hideVisualizationPanel: "Скрыть визуализацию", showVisualizationPanel: "Показать визуализацию", chooseColor: "Выбрать цвет", quickColors: "Быстрые цвета", sleep: "Сон", sleepSettings: "Настройки сна", sleepSettingsHint: "Эти поля используются только для встроенной привычки сна", sleepTargetDuration: "Целевая длительность", targetBedtime: "Цель отхода ко сну", targetWakeTime: "Цель подъёма", bedtime: "Лёг спать", wakeUp: "Проснулся", sleepDuration: "Длительность сна", sleepScore: "Оценка сна", sleepInvalidTimes: "Укажи время сна и пробуждения", sleepMeta: "цель {hours} ч · {bedtime} → {wake}"
     }
   };
 
@@ -107,9 +107,13 @@
   let relationOverlayHabitIds = [...restoredUiState.relationOverlayHabitIds];
   let relationOverlayInitialized = restoredUiState.relationOverlayInitialized;
   let relationMode = restoredUiState.relationMode;
+  let habitInfoCollapsed = restoredUiState.habitInfoCollapsed;
+  let insightsCollapsed = restoredUiState.insightsCollapsed;
 
   const els = {
+    workspaceLayout: document.querySelector("#workspaceLayout"),
     habitList: document.querySelector("#habitList"),
+    habitInfoToggleBtn: document.querySelector("#habitInfoToggleBtn"),
     emptyState: document.querySelector("#emptyState"),
     monthLabel: document.querySelector("#monthLabel"),
     monthSummary: document.querySelector("#monthSummary"),
@@ -124,6 +128,7 @@
     exportBtn: document.querySelector("#exportBtn"),
     importInput: document.querySelector("#importInput"),
     insightsPanel: document.querySelector("#insightsPanel"),
+    insightsToggleBtn: document.querySelector("#insightsToggleBtn"),
     visualHabitSelect: document.querySelector("#visualHabitSelect"),
     allHabitsHeatmap: document.querySelector("#allHabitsHeatmap"),
     insightKpis: document.querySelector("#insightKpis"),
@@ -232,6 +237,8 @@
         : [],
       relationOverlayInitialized: source.relationOverlayInitialized === true,
       relationMode: source.relationMode === "scatter" ? "scatter" : "overlay",
+      habitInfoCollapsed: source.habitInfoCollapsed === true,
+      insightsCollapsed: source.insightsCollapsed === true,
     };
   }
 
@@ -243,6 +250,8 @@
     relationOverlayHabitIds = [...saved.relationOverlayHabitIds];
     relationOverlayInitialized = saved.relationOverlayInitialized;
     relationMode = saved.relationMode;
+    habitInfoCollapsed = saved.habitInfoCollapsed;
+    insightsCollapsed = saved.insightsCollapsed;
   }
 
   function loadState() {
@@ -325,6 +334,8 @@
       relationOverlayHabitIds: [...relationOverlayHabitIds],
       relationOverlayInitialized,
       relationMode,
+      habitInfoCollapsed,
+      insightsCollapsed,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }
@@ -373,6 +384,18 @@
 
     els.addHabitBtn.addEventListener("click", () => openHabitModal());
     els.emptyAddHabitBtn.addEventListener("click", () => openHabitModal());
+
+    els.habitInfoToggleBtn?.addEventListener("click", () => {
+      habitInfoCollapsed = !habitInfoCollapsed;
+      applyPanelCollapseState();
+      saveState();
+    });
+
+    els.insightsToggleBtn?.addEventListener("click", () => {
+      insightsCollapsed = !insightsCollapsed;
+      applyPanelCollapseState();
+      saveState();
+    });
 
     document.querySelectorAll("[data-close-modal]").forEach((button) => {
       button.addEventListener("click", () => closeModal(document.querySelector(`#${button.dataset.closeModal}`)));
@@ -509,10 +532,34 @@
     }
   }
 
+  function applyPanelCollapseState() {
+    if (!els.workspaceLayout) return;
+    els.workspaceLayout.classList.toggle("habit-info-collapsed", habitInfoCollapsed);
+    els.workspaceLayout.classList.toggle("insights-collapsed", insightsCollapsed);
+
+    if (els.habitInfoToggleBtn) {
+      const label = habitInfoCollapsed ? t("showHabitInfo") : t("hideHabitInfo");
+      els.habitInfoToggleBtn.textContent = habitInfoCollapsed ? "›" : "‹";
+      els.habitInfoToggleBtn.setAttribute("aria-label", label);
+      els.habitInfoToggleBtn.title = label;
+      els.habitInfoToggleBtn.setAttribute("aria-expanded", String(!habitInfoCollapsed));
+    }
+
+    if (els.insightsToggleBtn) {
+      const label = insightsCollapsed ? t("showVisualizationPanel") : t("hideVisualizationPanel");
+      els.insightsToggleBtn.textContent = insightsCollapsed ? "‹" : "›";
+      els.insightsToggleBtn.setAttribute("aria-label", label);
+      els.insightsToggleBtn.title = label;
+      els.insightsToggleBtn.setAttribute("aria-expanded", String(!insightsCollapsed));
+    }
+  }
+
   function render() {
     state.settings = state.settings || { showPercentages: true, language: "ru" };
     if (state.settings.language !== "en" && state.settings.language !== "ru") state.settings.language = "ru";
     applyStaticTranslations();
+    applyPanelCollapseState();
+    if (els.habitInfoToggleBtn) els.habitInfoToggleBtn.hidden = state.habits.length === 0;
     els.showPercentagesToggle.checked = state.settings.showPercentages !== false;
     els.monthLabel.textContent = formatMonth(viewDate);
     els.emptyState.hidden = state.habits.length !== 0;

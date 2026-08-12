@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="dark" />
-  <title>l-manager — v0.6.6</title>
+  <title>l-manager — v0.6.7</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -51,8 +51,9 @@
         </div>
       </section>
 
-      <section class="workspace-layout">
+      <section class="workspace-layout" id="workspaceLayout">
         <div class="tracker-column">
+          <button class="side-panel-toggle habit-info-toggle" id="habitInfoToggleBtn" type="button" aria-expanded="true" aria-label="Hide habit info" title="Hide habit info">‹</button>
           <section id="habitList" class="habit-list" aria-live="polite"></section>
 
           <section id="emptyState" class="empty-state panel" hidden>
@@ -69,6 +70,7 @@
         </div>
 
         <aside id="insightsPanel" class="insights-panel panel" hidden data-i18n-aria-label="habitVisualization" aria-label="Habit visualization">
+          <button class="side-panel-toggle insights-toggle" id="insightsToggleBtn" type="button" aria-expanded="true" aria-label="Hide visualization" title="Hide visualization">›</button>
           <div class="insights-header">
             <div>
               <span class="eyebrow" data-i18n="visualization">Visualization</span>
