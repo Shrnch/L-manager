@@ -3,7 +3,7 @@
 
   const STORAGE_KEY = "l-manager:data:v1";
   const MIGRATION_BACKUP_KEY = "l-manager:data:backup:pre-sleep-v0.5.1";
-  const APP_VERSION = "0.6.9";
+  const APP_VERSION = "0.6.10";
 
   const I18N = {
     en: {
@@ -694,8 +694,8 @@
 
     if (entry) {
       const percent = getEntryPercent(habit, entry);
-      const bg = colorForPercent(habit.color, percent);
-      const fg = textColorForPercent(habit.color, percent);
+      const bg = colorForHabitPercent(habit, percent);
+      const fg = textColorForHabitPercent(habit, percent);
       style = `--entry-bg:${bg}; --entry-fg:${fg};`;
       const valueText = habit.trackingType === "sleep"
         ? formatSleepDuration(getSleepDurationMinutes(entry))
@@ -842,7 +842,7 @@
         }
 
         const percent = getEntryPercent(habit, entry);
-        const background = colorForPercent(habit.color, percent);
+        const background = colorForHabitPercent(habit, percent);
         let resultText;
         if (habit.trackingType === "sleep") {
           resultText = `${formatSleepDuration(getSleepDurationMinutes(entry))} · ${entry.bedtime || "—"} → ${entry.wakeTime || "—"} · ${formatPercent(percent)}%`;
@@ -891,7 +891,7 @@
         return {
           habit,
           percent,
-          color: colorForPercent(habit.color, percent),
+          color: colorForHabitPercent(habit, percent),
         };
       }).filter(Boolean);
 
@@ -1630,6 +1630,8 @@
     const isMood = habit.trackingType === "mood";
     const isSleep = habit.trackingType === "sleep";
 
+    els.entryValueSlider?.classList.toggle("mood-slider", isMood);
+
     els.entryValueField.hidden = isBoolean || isSleep;
     els.entryValueField.style.display = isBoolean || isSleep ? "none" : "flex";
     if (els.entryValueSliderWrap) els.entryValueSliderWrap.hidden = isBoolean || isSleep;
@@ -1721,6 +1723,19 @@
     { value: 67, key: "slightlyPleasant" },
     { value: 83, key: "pleasant" },
     { value: 100, key: "veryPleasant" },
+  ];
+
+  // Apple Watch-inspired Mood palette. Unlike normal habits, Mood is not a
+  // light-to-dark version of one habit colour: it travels across an emotional
+  // spectrum from violet/blue through teal to lime/yellow/orange.
+  const MOOD_COLOR_LEVELS = [
+    { value: 0, color: "#8065D1" },
+    { value: 17, color: "#7E9EE1" },
+    { value: 33, color: "#89AEE3" },
+    { value: 50, color: "#9CC8C6" },
+    { value: 67, color: "#D6E965" },
+    { value: 83, color: "#E8DD59" },
+    { value: 100, color: "#FD9539" },
   ];
 
   function moodLabelForValue(value) {
@@ -2011,6 +2026,27 @@
     return { ...shade, luminance };
   }
 
+  function getMoodShade(percent) {
+    const value = clamp(Number.isFinite(Number(percent)) ? Number(percent) : 50, 0, 100);
+    let lower = MOOD_COLOR_LEVELS[0];
+    let upper = MOOD_COLOR_LEVELS[MOOD_COLOR_LEVELS.length - 1];
+
+    for (let index = 1; index < MOOD_COLOR_LEVELS.length; index += 1) {
+      if (value <= MOOD_COLOR_LEVELS[index].value) {
+        lower = MOOD_COLOR_LEVELS[index - 1];
+        upper = MOOD_COLOR_LEVELS[index];
+        break;
+      }
+    }
+
+    const lowerRgb = hexToRgb(lower.color);
+    const upperRgb = hexToRgb(upper.color);
+    const span = upper.value - lower.value || 1;
+    const shade = mixRgb(lowerRgb, upperRgb, (value - lower.value) / span);
+    const luminance = (0.2126 * shade.r + 0.7152 * shade.g + 0.0722 * shade.b) / 255;
+    return { ...shade, luminance };
+  }
+
   function colorForPercent(hex, percent) {
     const shade = getPercentShade(hex, percent);
     return `rgb(${shade.r}, ${shade.g}, ${shade.b})`;
@@ -2019,6 +2055,22 @@
   function textColorForPercent(hex, percent) {
     const shade = getPercentShade(hex, percent);
     return shade.luminance >= 0.62 ? "rgba(17, 19, 25, 0.86)" : "rgba(255, 255, 255, 0.92)";
+  }
+
+  function colorForHabitPercent(habit, percent) {
+    if (habit?.trackingType === "mood") {
+      const shade = getMoodShade(percent);
+      return `rgb(${shade.r}, ${shade.g}, ${shade.b})`;
+    }
+    return colorForPercent(habit?.color || "#7C5CFC", percent);
+  }
+
+  function textColorForHabitPercent(habit, percent) {
+    if (habit?.trackingType === "mood") {
+      const shade = getMoodShade(percent);
+      return shade.luminance >= 0.62 ? "rgba(17, 19, 25, 0.88)" : "rgba(255, 255, 255, 0.94)";
+    }
+    return textColorForPercent(habit?.color || "#7C5CFC", percent);
   }
 
   function exportData() {
