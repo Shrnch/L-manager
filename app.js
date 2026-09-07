@@ -3,7 +3,7 @@
 
   const STORAGE_KEY = "l-manager:data:v1";
   const MIGRATION_BACKUP_KEY = "l-manager:data:backup:pre-sleep-v0.5.1";
-  const APP_VERSION = "0.6.8";
+  const APP_VERSION = "0.6.9";
 
   const I18N = {
     en: {
@@ -1445,6 +1445,8 @@
     els.habitName.value = habit?.name || "";
     els.habitTrackingType.value = habit?.trackingType || "target";
     els.habitTarget.value = habit?.trackingType === "target" ? String(habit.target ?? 1) : "1";
+    els.habitTarget.disabled = false;
+    els.habitTarget.readOnly = false;
     els.habitNegative.checked = Boolean(habit?.negativeHabit);
     els.habitUnit.value = habit?.unit || "";
     els.sleepTargetHours.value = formatSleepHours((habit?.sleepTargetMinutes ?? habit?.target ?? 480) / 60);
@@ -1485,7 +1487,9 @@
     els.unitField.hidden = !isTarget;
     els.unitField.style.display = isTarget ? "flex" : "none";
     els.habitTarget.required = isTarget;
-    els.habitTarget.disabled = !isTarget;
+    // Daily target is hidden for non-target habits, so it must never be disabled.
+    // Keeping it enabled avoids a stale disabled state when editing an existing target habit.
+    els.habitTarget.disabled = false;
     els.habitTarget.readOnly = false;
 
     els.sleepSettingsField.hidden = !isSleep;
