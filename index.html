@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="dark" />
-  <title>l-manager — v0.6.7</title>
+  <title>l-manager — v0.6.8</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -88,6 +88,16 @@
             <div class="habit-matrix-scroll">
               <div id="allHabitsHeatmap" class="habit-matrix" data-i18n-aria-label="habitHistoryMatrix" aria-label="Habit history matrix"></div>
             </div>
+          </section>
+
+          <section class="insight-section month-mosaic-section">
+            <div class="insight-section-heading">
+              <div>
+                <h3 data-i18n="monthMosaic">Month mosaic</h3>
+                <p data-i18n="monthMosaicDescription">Each day blends the colours of all tracked habits</p>
+              </div>
+            </div>
+            <div id="monthMosaic" class="month-mosaic" data-i18n-aria-label="monthMosaicAria" aria-label="Monthly combined habit colour calendar"></div>
           </section>
 
           <label class="insight-select-field">
@@ -180,6 +190,7 @@
           <select id="habitTrackingType">
             <option value="target" data-i18n="targetValue">Target value</option>
             <option value="percent" data-i18n="manualPercent">Manual percent</option>
+            <option value="mood" data-i18n="mood">Mood</option>
             <option value="boolean" data-i18n="yesNo">Yes / No</option>
             <option value="sleep" data-i18n="sleep" hidden>Sleep</option>
           </select>
@@ -280,6 +291,19 @@
       <form id="entryForm" class="form-grid">
         <input id="entryHabitId" type="hidden" />
         <input id="entryDate" type="hidden" />
+
+        <div class="mood-entry field-span-2" id="moodEntry" hidden>
+          <div class="mood-choice-grid">
+            <button type="button" class="mood-choice" data-mood-value="0"><span data-i18n="veryUnpleasant">Very unpleasant</span><b>0%</b></button>
+            <button type="button" class="mood-choice" data-mood-value="17"><span data-i18n="unpleasant">Unpleasant</span><b>17%</b></button>
+            <button type="button" class="mood-choice" data-mood-value="33"><span data-i18n="slightlyUnpleasant">Slightly unpleasant</span><b>33%</b></button>
+            <button type="button" class="mood-choice" data-mood-value="50"><span data-i18n="neutral">Neutral</span><b>50%</b></button>
+            <button type="button" class="mood-choice" data-mood-value="67"><span data-i18n="slightlyPleasant">Slightly pleasant</span><b>67%</b></button>
+            <button type="button" class="mood-choice" data-mood-value="83"><span data-i18n="pleasant">Pleasant</span><b>83%</b></button>
+            <button type="button" class="mood-choice" data-mood-value="100"><span data-i18n="veryPleasant">Very pleasant</span><b>100%</b></button>
+          </div>
+          <small data-i18n="moodFineTune">Choose a feeling as a starting point, then fine-tune the percentage if needed.</small>
+        </div>
 
         <label class="field field-span-2" id="entryValueField">
           <span id="entryValueLabel">Actual result</span>

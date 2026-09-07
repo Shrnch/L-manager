@@ -3,7 +3,7 @@
 
   const STORAGE_KEY = "l-manager:data:v1";
   const MIGRATION_BACKUP_KEY = "l-manager:data:backup:pre-sleep-v0.5.1";
-  const APP_VERSION = "0.6.7";
+  const APP_VERSION = "0.6.8";
 
   const I18N = {
     en: {
@@ -27,7 +27,7 @@
       newHabit: "New habit", editHabit: "Edit habit", hintPercent: "Enter the percentage directly. You can record 0%, 124%, 500%, or any other non-negative value.", hintBooleanNegative: "Negative habit: Yes still means a successful day. Phrase the habit as the desired state — for example “Do not smoke” → Yes.", hintBoolean: "Yes means a successful day; No means not completed.", hintTargetNegative: "Negative habit: the lower the actual value, the better. Daily target = 100%; below target gives more than 100%, above target gives less than 100%.", hintTarget: "Enter the actual value and the percentage is calculated automatically. The higher relative to target, the better; there is no upper limit.",
       targetMustPositive: "Daily target must be greater than 0", habitUpdated: "Habit updated", habitCreated: "Habit created", deleteConfirm: "Delete “{name}” and all its tracked days?", habitDeleted: "Habit deleted",
       percentage: "Percentage", actualResult: "Actual result", chooseYesNo: "Choose Yes or No", daySaved: "Day saved", dayCleared: "Day cleared", backupExported: "Backup exported", importConfirm: "Import will replace current L manager data. Continue?", backupImported: "Backup imported", importFailed: "Could not import this file",
-      language: "Language", hideHabitInfo: "Hide habit info", showHabitInfo: "Show habit info", hideVisualizationPanel: "Hide visualization", showVisualizationPanel: "Show visualization", chooseColor: "Choose color", quickColors: "Quick colors", sleep: "Sleep", sleepSettings: "Sleep settings", sleepSettingsHint: "Only the built-in Sleep habit uses these fields", sleepTargetDuration: "Target duration", targetBedtime: "Target bedtime", targetWakeTime: "Target wake-up", bedtime: "Bedtime", wakeUp: "Wake up", sleepDuration: "Sleep duration", sleepScore: "Sleep score", sleepInvalidTimes: "Choose both bedtime and wake-up", sleepMeta: "{hours} h target · {bedtime} → {wake}"
+      language: "Language", hideHabitInfo: "Hide habit info", showHabitInfo: "Show habit info", hideVisualizationPanel: "Hide visualization", showVisualizationPanel: "Show visualization", chooseColor: "Choose color", quickColors: "Quick colors", sleep: "Sleep", sleepSettings: "Sleep settings", sleepSettingsHint: "Only the built-in Sleep habit uses these fields", sleepTargetDuration: "Target duration", targetBedtime: "Target bedtime", targetWakeTime: "Target wake-up", bedtime: "Bedtime", wakeUp: "Wake up", sleepDuration: "Sleep duration", sleepScore: "Sleep score", sleepInvalidTimes: "Choose both bedtime and wake-up", sleepMeta: "{hours} h target · {bedtime} → {wake}", mood: "Mood", moodScale: "Mood · choose a feeling or fine-tune the percentage", moodPercentage: "Mood percentage", moodFineTune: "Choose a feeling as a starting point, then fine-tune the percentage if needed.", veryUnpleasant: "Very unpleasant", unpleasant: "Unpleasant", slightlyUnpleasant: "Slightly unpleasant", neutral: "Neutral", slightlyPleasant: "Slightly pleasant", pleasant: "Pleasant", veryPleasant: "Very pleasant", monthMosaic: "Month mosaic", monthMosaicDescription: "Each day blends the colours of all tracked habits", monthMosaicAria: "Monthly combined habit colour calendar"
     },
     ru: {
       habitTracker: "трекер привычек", updateDay: "Обновить день", export: "Экспорт", import: "Импорт", addHabit: "+ Привычка", previousMonth: "Предыдущий месяц", nextMonth: "Следующий месяц", today: "сегодня",
@@ -50,7 +50,7 @@
       newHabit: "Новая привычка", editHabit: "Редактировать привычку", hintPercent: "Вводишь процент напрямую. Можно записать 0%, 124%, 500% или любое другое неотрицательное значение.", hintBooleanNegative: "Негативная привычка: Да всё равно означает успешный день. Формулируй привычку как желаемое состояние — например «Не курить» → Да.", hintBoolean: "Да означает успешный день, Нет — невыполнение.", hintTargetNegative: "Негативная привычка: чем фактическое значение меньше, тем лучше. Дневная цель = 100%; ниже цели даёт больше 100%, выше цели — меньше 100%.", hintTarget: "Вводишь фактическое значение — процент считается автоматически. Чем больше относительно цели, тем лучше; верхнего лимита нет.",
       targetMustPositive: "Дневная цель должна быть больше 0", habitUpdated: "Привычка обновлена", habitCreated: "Привычка создана", deleteConfirm: "Удалить «{name}» и все заполненные дни?", habitDeleted: "Привычка удалена",
       percentage: "Процент", actualResult: "Фактический результат", chooseYesNo: "Выбери Да или Нет", daySaved: "День сохранён", dayCleared: "День очищен", backupExported: "Резервная копия экспортирована", importConfirm: "Импорт заменит текущие данные L manager. Продолжить?", backupImported: "Резервная копия импортирована", importFailed: "Не удалось импортировать файл",
-      language: "Язык", hideHabitInfo: "Скрыть информацию привычек", showHabitInfo: "Показать информацию привычек", hideVisualizationPanel: "Скрыть визуализацию", showVisualizationPanel: "Показать визуализацию", chooseColor: "Выбрать цвет", quickColors: "Быстрые цвета", sleep: "Сон", sleepSettings: "Настройки сна", sleepSettingsHint: "Эти поля используются только для встроенной привычки сна", sleepTargetDuration: "Целевая длительность", targetBedtime: "Цель отхода ко сну", targetWakeTime: "Цель подъёма", bedtime: "Лёг спать", wakeUp: "Проснулся", sleepDuration: "Длительность сна", sleepScore: "Оценка сна", sleepInvalidTimes: "Укажи время сна и пробуждения", sleepMeta: "цель {hours} ч · {bedtime} → {wake}"
+      language: "Язык", hideHabitInfo: "Скрыть информацию привычек", showHabitInfo: "Показать информацию привычек", hideVisualizationPanel: "Скрыть визуализацию", showVisualizationPanel: "Показать визуализацию", chooseColor: "Выбрать цвет", quickColors: "Быстрые цвета", sleep: "Сон", sleepSettings: "Настройки сна", sleepSettingsHint: "Эти поля используются только для встроенной привычки сна", sleepTargetDuration: "Целевая длительность", targetBedtime: "Цель отхода ко сну", targetWakeTime: "Цель подъёма", bedtime: "Лёг спать", wakeUp: "Проснулся", sleepDuration: "Длительность сна", sleepScore: "Оценка сна", sleepInvalidTimes: "Укажи время сна и пробуждения", sleepMeta: "цель {hours} ч · {bedtime} → {wake}", mood: "Настроение", moodScale: "Настроение · выбери состояние или подстрой процент", moodPercentage: "Процент настроения", moodFineTune: "Выбери состояние как базу, а затем при необходимости подстрой процент вручную.", veryUnpleasant: "Очень неприятно", unpleasant: "Неприятно", slightlyUnpleasant: "Слегка неприятно", neutral: "Нейтрально", slightlyPleasant: "Слегка приятно", pleasant: "Приятно", veryPleasant: "Очень приятно", monthMosaic: "Календарь месяца", monthMosaicDescription: "Каждый день смешивает цвета всех заполненных привычек", monthMosaicAria: "Общий цветовой календарь привычек за месяц"
     }
   };
 
@@ -131,6 +131,7 @@
     insightsToggleBtn: document.querySelector("#insightsToggleBtn"),
     visualHabitSelect: document.querySelector("#visualHabitSelect"),
     allHabitsHeatmap: document.querySelector("#allHabitsHeatmap"),
+    monthMosaic: document.querySelector("#monthMosaic"),
     insightKpis: document.querySelector("#insightKpis"),
     habitTrendChart: document.querySelector("#habitTrendChart"),
     trendCaption: document.querySelector("#trendCaption"),
@@ -186,6 +187,7 @@
     sleepEntry: document.querySelector("#sleepEntry"),
     entryBedtime: document.querySelector("#entryBedtime"),
     entryWakeTime: document.querySelector("#entryWakeTime"),
+    moodEntry: document.querySelector("#moodEntry"),
     booleanEntry: document.querySelector("#booleanEntry"),
     entryYesBtn: document.querySelector("#entryYesBtn"),
     entryNoBtn: document.querySelector("#entryNoBtn"),
@@ -286,10 +288,16 @@
         }
         if (!hadNegativeFlag || Object.prototype.hasOwnProperty.call(habit, "negativeTarget")) migrated = true;
 
+        const isLegacyMood = habit.trackingType === "percent" && String(habit.name || "").trim().toLowerCase() === "mood";
+        if (isLegacyMood) migrated = true;
+
+        const normalizedTrackingType = isLegacyMood ? "mood" : habit.trackingType;
         const normalized = {
           ...habit,
-          negativeHabit,
-          target: habit.trackingType === "boolean" ? 1 : habit.target,
+          trackingType: normalizedTrackingType,
+          negativeHabit: normalizedTrackingType === "mood" ? false : negativeHabit,
+          target: normalizedTrackingType === "boolean" ? 1 : normalizedTrackingType === "mood" ? 100 : habit.target,
+          unit: normalizedTrackingType === "mood" ? "%" : habit.unit,
         };
         delete normalized.negativeTarget;
         return normalized;
@@ -415,7 +423,6 @@
     });
 
     els.habitTrackingType.addEventListener("change", syncTrackingFields);
-    els.habitTarget.addEventListener("input", syncTrackingFields);
     els.habitNegative.addEventListener("change", syncTrackingFields);
     els.habitColor.addEventListener("input", () => {
       applyHabitColor(els.habitColor.value, { updateText: true });
@@ -441,12 +448,24 @@
 
     els.entryValue.addEventListener("input", () => {
       syncEntrySliderFromValue();
+      syncMoodButtons();
       updateEntryPreview();
     });
     if (els.entryValueSlider) {
       els.entryValueSlider.addEventListener("input", () => {
         els.entryValue.value = String(Math.round(Number(els.entryValueSlider.value) || 0));
         updateEntrySliderFill();
+        syncMoodButtons();
+        updateEntryPreview();
+      });
+    }
+    if (els.moodEntry) {
+      els.moodEntry.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-mood-value]");
+        if (!button) return;
+        els.entryValue.value = String(Number(button.dataset.moodValue));
+        syncEntrySliderFromValue();
+        syncMoodButtons();
         updateEntryPreview();
       });
     }
@@ -615,6 +634,8 @@
           bedtime: habit.sleepTargetBedtime || "00:30",
           wake: habit.sleepTargetWake || "08:30",
         })
+      : habit.trackingType === "mood"
+        ? t("moodScale")
       : habit.trackingType === "percent"
         ? t("manualPercentageNoLimit")
         : habit.trackingType === "boolean"
@@ -678,6 +699,8 @@
       style = `--entry-bg:${bg}; --entry-fg:${fg};`;
       const valueText = habit.trackingType === "sleep"
         ? formatSleepDuration(getSleepDurationMinutes(entry))
+        : habit.trackingType === "mood"
+          ? moodLabelForValue(Number(entry.value))
         : habit.trackingType === "percent"
           ? t("manual")
           : habit.trackingType === "boolean"
@@ -688,7 +711,7 @@
       let detailContent = "";
       if (habit.trackingType === "boolean") {
         detailContent = `<strong class="day-percent">${Number(entry.value) === 1 ? t("yes").toUpperCase() : t("no").toUpperCase()}</strong>`;
-      } else if (habit.trackingType === "percent") {
+      } else if (habit.trackingType === "percent" || habit.trackingType === "mood") {
         detailContent = showPercentages ? `<strong class="day-percent">${formatPercent(percent)}%</strong>` : "";
       } else {
         detailContent = `<span class="day-value">${valueText}</span>${showPercentages ? `<strong class="day-percent">${formatPercent(percent)}%</strong>` : ""}`;
@@ -744,6 +767,7 @@
       <div class="insight-kpi"><span>${t("bestStreak")}</span><strong>${bestStreak} ${dayWord(bestStreak)}</strong></div>`;
 
     els.allHabitsHeatmap.innerHTML = renderAllHabitsHeatmap(viewDate);
+    if (els.monthMosaic) els.monthMosaic.innerHTML = renderMonthMosaic(viewDate);
     els.trendCaption.textContent = t("currentMonthTarget", { month: formatMonth(viewDate) });
     els.habitTrendChart.innerHTML = renderTrendChart(habit, viewDate);
     renderRelations();
@@ -824,8 +848,8 @@
           resultText = `${formatSleepDuration(getSleepDurationMinutes(entry))} · ${entry.bedtime || "—"} → ${entry.wakeTime || "—"} · ${formatPercent(percent)}%`;
         } else if (habit.trackingType === "boolean") {
           resultText = Number(entry.value) === 1 ? t("yes") : t("no");
-        } else if (habit.trackingType === "percent") {
-          resultText = `${formatPercent(percent)}%`;
+        } else if (habit.trackingType === "percent" || habit.trackingType === "mood") {
+          resultText = `${habit.trackingType === "mood" ? `${moodLabelForValue(Number(entry.value))} · ` : ""}${formatPercent(percent)}%`;
         } else {
           resultText = `${formatNumber(entry.value)}${habit.unit ? ` ${habit.unit}` : ""} · ${formatPercent(percent)}%`;
         }
@@ -850,6 +874,51 @@
         <div class="habit-matrix-dates">${dateLabels}</div>
       </div>
       ${rows.join("")}`;
+  }
+
+  function renderMonthMosaic(date) {
+    const calendar = getCalendarDays(date);
+    const weekdayLabels = weekdays().map((day) => `<span class="month-mosaic-weekday">${day}</span>`).join("");
+    const cells = calendar.map((day) => {
+      const inMonth = day.getMonth() === date.getMonth();
+      if (!inMonth) return `<span class="month-mosaic-day is-outside" aria-hidden="true"></span>`;
+
+      const dateKey = toDateKey(day);
+      const tracked = state.habits.map((habit) => {
+        const entry = state.entries[entryKey(habit.id, dateKey)];
+        if (!entry) return null;
+        const percent = getEntryPercent(habit, entry);
+        return {
+          habit,
+          percent,
+          color: colorForPercent(habit.color, percent),
+        };
+      }).filter(Boolean);
+
+      const today = isSameDate(day, new Date());
+      const classes = ["month-mosaic-day"];
+      if (today) classes.push("is-today");
+      if (!tracked.length) classes.push("is-empty");
+
+      let background = "rgba(255,255,255,.025)";
+      if (tracked.length === 1) {
+        background = tracked[0].color;
+      } else if (tracked.length > 1) {
+        const stops = tracked.map((item, index) => {
+          const position = tracked.length === 1 ? 0 : (index / (tracked.length - 1)) * 100;
+          return `${item.color} ${position.toFixed(1)}%`;
+        });
+        background = `linear-gradient(135deg, ${stops.join(", ")})`;
+      }
+
+      const details = tracked.length
+        ? tracked.map(({ habit, percent }) => `${habit.name}: ${formatPercent(percent)}%`).join(" · ")
+        : t("noData");
+      const tooltip = `${formatDate(day)} · ${details}`;
+      return `<span class="${classes.join(" ")}" style="--mosaic-bg:${background}" title="${escapeHtml(tooltip)}" aria-label="${escapeHtml(tooltip)}"><b>${day.getDate()}</b></span>`;
+    }).join("");
+
+    return `<div class="month-mosaic-weekdays">${weekdayLabels}</div><div class="month-mosaic-grid">${cells}</div>`;
   }
 
   function renderTrendChart(habit, date) {
@@ -1091,7 +1160,7 @@
   function getRelationUnit(habit) {
     if (habit.trackingType === "sleep") return "h";
     if (habit.trackingType === "boolean") return t("yesNo");
-    if (habit.trackingType === "percent") return "%";
+    if (habit.trackingType === "percent" || habit.trackingType === "mood") return "%";
     return habit.unit || t("value");
   }
 
@@ -1291,7 +1360,7 @@
   function formatRelationRaw(habit, value) {
     if (habit.trackingType === "sleep") return `${formatNumber(value)} h`;
     if (habit.trackingType === "boolean") return value === 1 ? t("yes") : t("no");
-    if (habit.trackingType === "percent") return `${formatPercent(value)}%`;
+    if (habit.trackingType === "percent" || habit.trackingType === "mood") return `${formatPercent(value)}%`;
     return `${formatNumber(value)}${habit.unit ? ` ${habit.unit}` : ""}`;
   }
 
@@ -1375,7 +1444,7 @@
 
     els.habitName.value = habit?.name || "";
     els.habitTrackingType.value = habit?.trackingType || "target";
-    els.habitTarget.value = habit?.trackingType === "target" ? (habit.target ?? 1) : 1;
+    els.habitTarget.value = habit?.trackingType === "target" ? String(habit.target ?? 1) : "1";
     els.habitNegative.checked = Boolean(habit?.negativeHabit);
     els.habitUnit.value = habit?.unit || "";
     els.sleepTargetHours.value = formatSleepHours((habit?.sleepTargetMinutes ?? habit?.target ?? 480) / 60);
@@ -1404,6 +1473,7 @@
     const isTarget = type === "target";
     const isBoolean = type === "boolean";
     const isPercent = type === "percent";
+    const isMood = type === "mood";
     const isSleep = type === "sleep";
     const isNegative = els.habitNegative.checked;
 
@@ -1415,6 +1485,8 @@
     els.unitField.hidden = !isTarget;
     els.unitField.style.display = isTarget ? "flex" : "none";
     els.habitTarget.required = isTarget;
+    els.habitTarget.disabled = !isTarget;
+    els.habitTarget.readOnly = false;
 
     els.sleepSettingsField.hidden = !isSleep;
     els.sleepSettingsField.style.display = isSleep ? "grid" : "none";
@@ -1422,12 +1494,14 @@
     els.sleepTargetBedtime.required = isSleep;
     els.sleepTargetWake.required = isSleep;
 
-    els.negativeHabitField.hidden = isPercent || isSleep;
-    els.negativeHabitField.style.display = isPercent || isSleep ? "none" : "grid";
-    if (isPercent || isSleep) els.habitNegative.checked = false;
+    els.negativeHabitField.hidden = isPercent || isMood || isSleep;
+    els.negativeHabitField.style.display = isPercent || isMood || isSleep ? "none" : "grid";
+    if (isPercent || isMood || isSleep) els.habitNegative.checked = false;
 
     if (isSleep) {
       els.trackingHint.textContent = t("sleepSettingsHint");
+    } else if (isMood) {
+      els.trackingHint.textContent = t("moodFineTune");
     } else if (isPercent) {
       els.trackingHint.textContent = t("hintPercent");
     } else if (isBoolean) {
@@ -1464,8 +1538,8 @@
       name: els.habitName.value.trim(),
       trackingType,
       target: trackingType === "target" ? target : trackingType === "boolean" ? 1 : trackingType === "sleep" ? sleepTargetMinutes : 100,
-      negativeHabit: trackingType === "percent" || trackingType === "sleep" ? false : els.habitNegative.checked,
-      unit: trackingType === "target" ? els.habitUnit.value.trim() : trackingType === "percent" ? "%" : trackingType === "sleep" ? "h" : "",
+      negativeHabit: trackingType === "percent" || trackingType === "mood" || trackingType === "sleep" ? false : els.habitNegative.checked,
+      unit: trackingType === "target" ? els.habitUnit.value.trim() : trackingType === "percent" || trackingType === "mood" ? "%" : trackingType === "sleep" ? "h" : "",
       color,
       createdAt: previous?.createdAt || new Date().toISOString(),
       ...(trackingType === "sleep" ? {
@@ -1522,7 +1596,13 @@
     els.booleanEntry.dataset.value = habit.trackingType === "boolean" && entry ? String(Number(entry.value) === 1 ? 1 : 0) : "";
     syncBooleanButtons();
 
-    if (habit.trackingType === "percent") {
+    els.entryValue.removeAttribute("max");
+    if (habit.trackingType === "mood") {
+      els.entryValueLabel.textContent = t("moodPercentage");
+      els.entryUnitBadge.textContent = "%";
+      els.entryValue.placeholder = "50";
+      els.entryValue.max = "100";
+    } else if (habit.trackingType === "percent") {
       els.entryValueLabel.textContent = t("percentage");
       els.entryUnitBadge.textContent = "%";
       els.entryValue.placeholder = "100";
@@ -1532,6 +1612,7 @@
       els.entryValue.placeholder = String(habit.target);
     }
 
+    syncMoodButtons();
     updateEntryPreview();
     openModal(els.entryModal);
     setTimeout(() => {
@@ -1542,12 +1623,18 @@
 
   function syncEntryTrackingFields(habit) {
     const isBoolean = habit.trackingType === "boolean";
+    const isMood = habit.trackingType === "mood";
     const isSleep = habit.trackingType === "sleep";
 
     els.entryValueField.hidden = isBoolean || isSleep;
     els.entryValueField.style.display = isBoolean || isSleep ? "none" : "flex";
     if (els.entryValueSliderWrap) els.entryValueSliderWrap.hidden = isBoolean || isSleep;
     els.entryValue.required = !isBoolean && !isSleep;
+
+    if (els.moodEntry) {
+      els.moodEntry.hidden = !isMood;
+      els.moodEntry.style.display = isMood ? "grid" : "none";
+    }
 
     els.booleanEntry.hidden = !isBoolean;
     els.booleanEntry.style.display = isBoolean ? "grid" : "none";
@@ -1565,7 +1652,9 @@
     const finiteCurrent = Number.isFinite(current) && current >= 0 ? current : 0;
     let max;
 
-    if (habit.trackingType === "percent") {
+    if (habit.trackingType === "mood") {
+      max = 100;
+    } else if (habit.trackingType === "percent") {
       max = Math.max(500, niceSliderMax(finiteCurrent));
     } else {
       const target = Math.max(0, Number(habit.target) || 0);
@@ -1601,13 +1690,13 @@
     }
 
     let max = Number(els.entryValueSlider.max) || 100;
-    if (raw > max) {
+    if (habit.trackingType !== "mood" && raw > max) {
       max = niceSliderMax(raw);
       els.entryValueSlider.max = String(max);
       els.entrySliderMax.textContent = formatNumber(max);
     }
 
-    els.entryValueSlider.value = String(Math.round(raw));
+    els.entryValueSlider.value = String(Math.round(clamp(raw, 0, max)));
     updateEntrySliderFill();
   }
 
@@ -1618,6 +1707,35 @@
     const value = Number(els.entryValueSlider.value) || 0;
     const progress = max > min ? ((value - min) / (max - min)) * 100 : 0;
     els.entryValueSlider.style.setProperty("--slider-progress", `${clamp(progress, 0, 100)}%`);
+  }
+
+  const MOOD_LEVELS = [
+    { value: 0, key: "veryUnpleasant" },
+    { value: 17, key: "unpleasant" },
+    { value: 33, key: "slightlyUnpleasant" },
+    { value: 50, key: "neutral" },
+    { value: 67, key: "slightlyPleasant" },
+    { value: 83, key: "pleasant" },
+    { value: 100, key: "veryPleasant" },
+  ];
+
+  function moodLabelForValue(value) {
+    if (!Number.isFinite(value)) return t("mood");
+    let closest = MOOD_LEVELS[0];
+    for (const level of MOOD_LEVELS.slice(1)) {
+      if (Math.abs(level.value - value) < Math.abs(closest.value - value)) closest = level;
+    }
+    return t(closest.key);
+  }
+
+  function syncMoodButtons() {
+    if (!els.moodEntry) return;
+    const habit = state.habits.find((item) => item.id === els.entryHabitId.value);
+    const active = habit?.trackingType === "mood";
+    const value = Number(els.entryValue.value);
+    els.moodEntry.querySelectorAll("[data-mood-value]").forEach((button) => {
+      button.classList.toggle("selected", active && Number(button.dataset.moodValue) === value);
+    });
   }
 
   function setBooleanEntry(value) {
@@ -1671,14 +1789,14 @@
     }
 
     const value = Number(els.entryValue.value);
-    if (els.entryValue.value === "" || !Number.isFinite(value) || value < 0) {
+    if (els.entryValue.value === "" || !Number.isFinite(value) || value < 0 || (habit.trackingType === "mood" && value > 100)) {
       els.entryPercentPreview.textContent = "—";
       return;
     }
 
     if (!showPercentages) {
-      if (habit.trackingType === "percent") {
-        els.entryPercentPreview.textContent = "—";
+      if (habit.trackingType === "percent" || habit.trackingType === "mood") {
+        els.entryPercentPreview.textContent = habit.trackingType === "mood" ? moodLabelForValue(value) : "—";
       } else {
         els.entryPercentPreview.textContent = `${formatNumber(value)}${habit.unit ? ` ${habit.unit}` : ""}`;
       }
@@ -1686,7 +1804,9 @@
     }
 
     const percent = getEntryPercent(habit, { value });
-    els.entryPercentPreview.textContent = `${formatPercent(percent)}%`;
+    els.entryPercentPreview.textContent = habit.trackingType === "mood"
+      ? `${moodLabelForValue(value)} · ${formatPercent(percent)}%`
+      : `${formatPercent(percent)}%`;
   }
 
   function saveEntryFromForm(event) {
@@ -1724,7 +1844,7 @@
       };
     } else {
       const value = Number(els.entryValue.value);
-      if (!Number.isFinite(value) || value < 0) return;
+      if (!Number.isFinite(value) || value < 0 || (habit.trackingType === "mood" && value > 100)) return;
       entry = {
         value,
         note: els.entryNote.value.trim(),
@@ -1808,7 +1928,7 @@
     if (!entry) return null;
     if (habit.trackingType === "sleep") return getSleepScore(habit, entry);
     const value = Number(entry.value) || 0;
-    if (habit.trackingType === "percent") return value;
+    if (habit.trackingType === "percent" || habit.trackingType === "mood") return value;
     if (habit.trackingType === "boolean") return value === 1 ? 100 : 0;
 
     const target = Number(habit.target);
@@ -1839,60 +1959,52 @@
       .map(([key, entry]) => ({ dateKey: key.split("::")[1], entry }));
   }
 
+  function mixRgb(a, b, amount) {
+    const tValue = clamp(amount, 0, 1);
+    return {
+      r: Math.round(a.r + (b.r - a.r) * tValue),
+      g: Math.round(a.g + (b.g - a.g) * tValue),
+      b: Math.round(a.b + (b.b - a.b) * tValue),
+    };
+  }
+
   function getPercentShade(hex, percent) {
     const base = hexToRgb(hex) || { r: 124, g: 92, b: 252 };
+    const white = { r: 255, g: 255, b: 255 };
     const value = Number.isFinite(Number(percent)) ? Number(percent) : 0;
 
-    // Positive scale: pale tint at 0%, exact chosen HEX at 100%, then gently darker.
-    // Negative scale is deliberately separate: the farther below 0, the more the
-    // cell shifts toward a muted dark failure tone. This keeps 0%, -100%, -300%
-    // and -500% clearly distinguishable instead of collapsing into the same white.
-    let r;
-    let g;
-    let b;
+    // Five deliberately separated anchor colours. Values between anchors are
+    // interpolated inside their local 25-point band, which makes neighbouring
+    // completion levels much easier to distinguish than one long pale gradient.
+    const anchors = [
+      { p: 0, c: mixRgb(base, white, 0.84) },
+      { p: 25, c: mixRgb(base, white, 0.64) },
+      { p: 50, c: mixRgb(base, white, 0.43) },
+      { p: 75, c: mixRgb(base, white, 0.21) },
+      { p: 100, c: base },
+    ];
 
+    let shade;
     if (value < 0) {
-      const zeroWhiteMix = 0.80;
-      const zeroShade = {
-        r: base.r * (1 - zeroWhiteMix) + 255 * zeroWhiteMix,
-        g: base.g * (1 - zeroWhiteMix) + 255 * zeroWhiteMix,
-        b: base.b * (1 - zeroWhiteMix) + 255 * zeroWhiteMix,
-      };
-
-      // Keep a little of the habit hue in the failure anchor so different habits
-      // remain identifiable, while desaturating enough to read as a bad state.
-      const failureNeutral = { r: 72, g: 76, b: 90 };
-      const baseWeight = 0.15;
-      const failureAnchor = {
-        r: base.r * baseWeight + failureNeutral.r * (1 - baseWeight),
-        g: base.g * baseWeight + failureNeutral.g * (1 - baseWeight),
-        b: base.b * baseWeight + failureNeutral.b * (1 - baseWeight),
-      };
-
-      const negativeIntensity = 1 - Math.exp(-Math.abs(value) / 170);
-      r = Math.round(zeroShade.r + (failureAnchor.r - zeroShade.r) * negativeIntensity);
-      g = Math.round(zeroShade.g + (failureAnchor.g - zeroShade.g) * negativeIntensity);
-      b = Math.round(zeroShade.b + (failureAnchor.b - zeroShade.b) * negativeIntensity);
+      const zeroShade = anchors[0].c;
+      const failureNeutral = { r: 68, g: 72, b: 84 };
+      const failureAnchor = mixRgb(failureNeutral, base, 0.16);
+      const intensity = 1 - Math.exp(-Math.abs(value) / 170);
+      shade = mixRgb(zeroShade, failureAnchor, intensity);
+    } else if (value <= 100) {
+      const upperIndex = Math.min(4, Math.ceil(value / 25));
+      const lowerIndex = Math.max(0, upperIndex - 1);
+      const lower = anchors[lowerIndex];
+      const upper = anchors[upperIndex];
+      const band = upper.p - lower.p || 1;
+      shade = mixRgb(lower.c, upper.c, (value - lower.p) / band);
     } else {
-      let mixWithWhite = 0;
-      let mixWithBlack = 0;
-
-      if (value < 100) {
-        const progress = value / 100;
-        mixWithWhite = 0.80 * (1 - progress);
-      } else if (value > 100) {
-        const overIntensity = 1 - Math.exp(-(value - 100) / 110);
-        mixWithBlack = 0.22 * overIntensity;
-      }
-
-      r = Math.round((base.r * (1 - mixWithWhite) + 255 * mixWithWhite) * (1 - mixWithBlack));
-      g = Math.round((base.g * (1 - mixWithWhite) + 255 * mixWithWhite) * (1 - mixWithBlack));
-      b = Math.round((base.b * (1 - mixWithWhite) + 255 * mixWithWhite) * (1 - mixWithBlack));
+      const overIntensity = 1 - Math.exp(-(value - 100) / 110);
+      shade = mixRgb(base, { r: 0, g: 0, b: 0 }, 0.22 * overIntensity);
     }
 
-    // Perceived luminance is used only to choose readable text colour.
-    const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-    return { r, g, b, luminance };
+    const luminance = (0.2126 * shade.r + 0.7152 * shade.g + 0.0722 * shade.b) / 255;
+    return { ...shade, luminance };
   }
 
   function colorForPercent(hex, percent) {
