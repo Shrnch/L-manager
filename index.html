@@ -4,8 +4,39 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="dark" />
-  <title>l-manager — v0.6.10</title>
+  <title>l-manager — v0.6.13</title>
   <link rel="stylesheet" href="styles.css" />
+  <style>
+    .sleep-window-section { display:grid; gap:7px; margin-top:10px; }
+    .sleep-window-section[hidden] { display:none !important; }
+    .sleep-window-heading { display:flex; align-items:baseline; justify-content:space-between; gap:10px; padding:0 2px; }
+    .sleep-window-heading strong { font-size:10px; color:var(--text, #f3f4f7); }
+    .sleep-window-heading small { font-size:7px; color:var(--muted-2, #7f8491); text-align:right; }
+    .sleep-window-chart { min-height:210px; }
+    .sleep-target-time-line { stroke:rgba(255,255,255,.28); stroke-width:1; stroke-dasharray:3 4; }
+    .study-entry { display:grid; gap:10px; }
+    .study-entry[hidden] { display:none !important; }
+    .study-entry-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .study-entry-heading > div { display:grid; gap:3px; }
+    .study-entry-heading strong { font-size:11px; color:var(--text, #f3f4f7); }
+    .study-entry-heading small, .study-legacy-value { font-size:9px; color:var(--muted-2, #7f8491); line-height:1.35; }
+    .study-add-period { min-height:32px; padding:6px 10px; white-space:nowrap; }
+    .study-periods-list { display:grid; gap:8px; }
+    .study-period-row { display:grid; grid-template-columns:22px minmax(0,1fr) minmax(0,1fr) minmax(0,.9fr) 34px; gap:8px; align-items:end; padding:9px; border:1px solid rgba(255,255,255,.07); border-radius:10px; background:rgba(255,255,255,.018); }
+    .study-period-index { align-self:center; justify-self:center; color:var(--muted-2, #7f8491); font-size:9px; font-variant-numeric:tabular-nums; }
+    .study-period-row .field { gap:5px; }
+    .study-period-row .field > span { font-size:8px; }
+    .study-period-row input { min-width:0; }
+    .study-remove-period { width:34px; height:34px; align-self:end; }
+    .study-legacy-value { padding:8px 10px; border:1px dashed rgba(255,255,255,.1); border-radius:9px; }
+    @media (max-width:560px) {
+      .study-entry-heading { align-items:flex-start; }
+      .study-period-row { grid-template-columns:22px 1fr 1fr 34px; }
+      .study-break-field { grid-column:2 / 4; }
+      .sleep-window-heading { display:grid; }
+      .sleep-window-heading small { text-align:left; }
+    }
+  </style>
 </head>
 <body>
   <div class="app-shell">
@@ -115,6 +146,13 @@
               </div>
             </div>
             <div id="habitTrendChart" class="habit-trend-chart"></div>
+            <div id="sleepWindowSection" class="sleep-window-section" hidden>
+              <div class="sleep-window-heading">
+                <strong data-i18n="sleepWindow">Sleep window</strong>
+                <small data-i18n="sleepWindowDescription">Sleep and wake times · shaded area is time asleep</small>
+              </div>
+              <div id="sleepWindowChart" class="habit-trend-chart sleep-window-chart"></div>
+            </div>
           </section>
 
           <section class="insight-section relation-section">
@@ -177,7 +215,7 @@
         <button class="icon-button modal-close" data-close-modal="habitModal" data-i18n-aria-label="close" aria-label="Close">×</button>
       </div>
 
-      <form id="habitForm" class="form-grid">
+      <form id="habitForm" class="form-grid" novalidate>
         <input id="habitId" type="hidden" />
 
         <label class="field field-span-2">
@@ -191,6 +229,7 @@
             <option value="target" data-i18n="targetValue">Target value</option>
             <option value="percent" data-i18n="manualPercent">Manual percent</option>
             <option value="mood" data-i18n="mood">Mood</option>
+            <option value="study" data-i18n="studySessions">Study sessions</option>
             <option value="boolean" data-i18n="yesNo">Yes / No</option>
             <option value="sleep" data-i18n="sleep" hidden>Sleep</option>
           </select>
@@ -329,6 +368,18 @@
             <span data-i18n="wakeUp">Wake up</span>
             <input id="entryWakeTime" type="time" />
           </label>
+        </div>
+
+        <div class="study-entry field-span-2" id="studyEntry" hidden>
+          <div class="study-entry-heading">
+            <div>
+              <strong data-i18n="studyPeriods">Study periods</strong>
+              <small data-i18n="studyPeriodsHint">Add each study block. Break minutes are subtracted automatically.</small>
+            </div>
+            <button class="button button-ghost study-add-period" id="addStudyPeriodBtn" type="button" data-i18n="addStudyPeriod">+ Period</button>
+          </div>
+          <div id="studyLegacyValue" class="study-legacy-value" hidden></div>
+          <div id="studyPeriodsList" class="study-periods-list"></div>
         </div>
 
         <div class="boolean-entry field-span-2" id="booleanEntry" hidden>

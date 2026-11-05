@@ -3,7 +3,7 @@
 
   const STORAGE_KEY = "l-manager:data:v1";
   const MIGRATION_BACKUP_KEY = "l-manager:data:backup:pre-sleep-v0.5.1";
-  const APP_VERSION = "0.6.10";
+  const APP_VERSION = "0.6.13";
 
   const I18N = {
     en: {
@@ -18,7 +18,7 @@
       yes: "Yes", no: "No", result: "Result", note: "Note", optional: "optional", notePlaceholder: "Context for the day, if useful…", clearDay: "Clear day", saveDay: "Save day",
       habits: "habits", tracked: "tracked", avg: "avg", success: "success", bestStreak: "best streak", day: "day", days: "days", target: "Target", perDay: "/ day", lowerIsBetter: "Lower is better", positiveHabit: "Positive habit", yesSuccess: "Yes = success", manualPercentageNoLimit: "Manual percentage · no upper limit",
       showVisualization: "Show visualization", editHabitAria: "Edit {name}", hasNote: "Has note", manual: "manual", future: "future", noData: "no data",
-      currentMonthTarget: "{month} · target line at 100%", noTrackedDays: "No tracked days yet", dailyPercentageTrend: "Daily percentage trend for {name}",
+      currentMonthTarget: "{month} · target line at 100%", sleepDurationTrendTarget: "{month} · sleep duration · 100% = {duration}", noTrackedDays: "No tracked days yet", dailyPercentageTrend: "Daily percentage trend for {name}",
       selectAtLeastOne: "Select at least one habit to draw the overlay.", noHabitsSelected: "No habits selected", habitSelected: "habit selected", habitsSelected: "habits selected", trackedDayThisMonth: "tracked day this month", trackedDaysThisMonth: "tracked days this month",
       addSecondHabit: "Add a second habit to compare relationships.", twoHabitsNeeded: "Two habits are needed", pearsonTitle: "Pearson correlation across days where both habits were tracked", sharedDays: "shared days",
       notEnoughVariation: "not enough variation", strong: "strong", moderate: "moderate", weak: "weak", little: "little", relation: "relation", inverse: "inverse relation", positive: "positive relation",
@@ -27,7 +27,7 @@
       newHabit: "New habit", editHabit: "Edit habit", hintPercent: "Enter the percentage directly. You can record 0%, 124%, 500%, or any other non-negative value.", hintBooleanNegative: "Negative habit: Yes still means a successful day. Phrase the habit as the desired state — for example “Do not smoke” → Yes.", hintBoolean: "Yes means a successful day; No means not completed.", hintTargetNegative: "Negative habit: the lower the actual value, the better. Daily target = 100%; below target gives more than 100%, above target gives less than 100%.", hintTarget: "Enter the actual value and the percentage is calculated automatically. The higher relative to target, the better; there is no upper limit.",
       targetMustPositive: "Daily target must be greater than 0", habitUpdated: "Habit updated", habitCreated: "Habit created", deleteConfirm: "Delete “{name}” and all its tracked days?", habitDeleted: "Habit deleted",
       percentage: "Percentage", actualResult: "Actual result", chooseYesNo: "Choose Yes or No", daySaved: "Day saved", dayCleared: "Day cleared", backupExported: "Backup exported", importConfirm: "Import will replace current L manager data. Continue?", backupImported: "Backup imported", importFailed: "Could not import this file",
-      language: "Language", hideHabitInfo: "Hide habit info", showHabitInfo: "Show habit info", hideVisualizationPanel: "Hide visualization", showVisualizationPanel: "Show visualization", chooseColor: "Choose color", quickColors: "Quick colors", sleep: "Sleep", sleepSettings: "Sleep settings", sleepSettingsHint: "Only the built-in Sleep habit uses these fields", sleepTargetDuration: "Target duration", targetBedtime: "Target bedtime", targetWakeTime: "Target wake-up", bedtime: "Bedtime", wakeUp: "Wake up", sleepDuration: "Sleep duration", sleepScore: "Sleep score", sleepInvalidTimes: "Choose both bedtime and wake-up", sleepMeta: "{hours} h target · {bedtime} → {wake}", mood: "Mood", moodScale: "Mood · choose a feeling or fine-tune the percentage", moodPercentage: "Mood percentage", moodFineTune: "Choose a feeling as a starting point, then fine-tune the percentage if needed.", veryUnpleasant: "Very unpleasant", unpleasant: "Unpleasant", slightlyUnpleasant: "Slightly unpleasant", neutral: "Neutral", slightlyPleasant: "Slightly pleasant", pleasant: "Pleasant", veryPleasant: "Very pleasant", monthMosaic: "Month mosaic", monthMosaicDescription: "Each day blends the colours of all tracked habits", monthMosaicAria: "Monthly combined habit colour calendar"
+      language: "Language", hideHabitInfo: "Hide habit info", showHabitInfo: "Show habit info", hideVisualizationPanel: "Hide visualization", showVisualizationPanel: "Show visualization", chooseColor: "Choose color", quickColors: "Quick colors", sleep: "Sleep", sleepSettings: "Sleep settings", sleepSettingsHint: "Only the built-in Sleep habit uses these fields", sleepTargetDuration: "Target duration", targetBedtime: "Target bedtime", targetWakeTime: "Target wake-up", bedtime: "Bedtime", wakeUp: "Wake up", sleepDuration: "Sleep duration", sleepScore: "Sleep score", sleepInvalidTimes: "Choose both bedtime and wake-up", sleepMeta: "{hours} h target · {bedtime} → {wake}", mood: "Mood", moodScale: "Mood · choose a feeling or fine-tune the percentage", moodPercentage: "Mood percentage", moodFineTune: "Choose a feeling as a starting point, then fine-tune the percentage if needed.", veryUnpleasant: "Very unpleasant", unpleasant: "Unpleasant", slightlyUnpleasant: "Slightly unpleasant", neutral: "Neutral", slightlyPleasant: "Slightly pleasant", pleasant: "Pleasant", veryPleasant: "Very pleasant", monthMosaic: "Month mosaic", monthMosaicDescription: "Each day blends the colours of all tracked habits", monthMosaicAria: "Monthly combined habit colour calendar", sleepWindow: "Sleep window", sleepWindowDescription: "Sleep and wake times · shaded area is time asleep", sleepTime: "Sleep time", wakeTimeLabel: "Wake time", studySessions: "Study sessions", studyPeriods: "Study periods", studyPeriodsHint: "Add each study block. Break minutes are subtracted automatically.", addStudyPeriod: "+ Period", studyStart: "Start", studyEnd: "End", studyBreaks: "Breaks", minutesShort: "min", removePeriod: "Remove", studyHint: "Track one or more study periods. Daily result is net study time after breaks.", studyInvalidPeriod: "Check study period times and breaks", studyLegacy: "Legacy value: {hours} h · add periods to replace it", netStudyTime: "Net study time"
     },
     ru: {
       habitTracker: "трекер привычек", updateDay: "Обновить день", export: "Экспорт", import: "Импорт", addHabit: "+ Привычка", previousMonth: "Предыдущий месяц", nextMonth: "Следующий месяц", today: "сегодня",
@@ -41,7 +41,7 @@
       yes: "Да", no: "Нет", result: "Результат", note: "Заметка", optional: "необязательно", notePlaceholder: "Контекст дня, если нужен…", clearDay: "Очистить день", saveDay: "Сохранить день",
       habits: "привычки", tracked: "заполнено", avg: "среднее", success: "успех", bestStreak: "лучшая серия", day: "день", days: "дней", target: "Цель", perDay: "/ день", lowerIsBetter: "Чем меньше, тем лучше", positiveHabit: "Позитивная привычка", yesSuccess: "Да = успех", manualPercentageNoLimit: "Процент вручную · без верхнего лимита",
       showVisualization: "Показать визуализацию", editHabitAria: "Редактировать {name}", hasNote: "Есть заметка", manual: "вручную", future: "будущее", noData: "нет данных",
-      currentMonthTarget: "{month} · линия цели на 100%", noTrackedDays: "Пока нет заполненных дней", dailyPercentageTrend: "Дневной процент для {name}",
+      currentMonthTarget: "{month} · линия цели на 100%", sleepDurationTrendTarget: "{month} · длительность сна · 100% = {duration}", noTrackedDays: "Пока нет заполненных дней", dailyPercentageTrend: "Дневной процент для {name}",
       selectAtLeastOne: "Выбери хотя бы одну привычку для наложения.", noHabitsSelected: "Привычки не выбраны", habitSelected: "привычка выбрана", habitsSelected: "привычек выбрано", trackedDayThisMonth: "заполненный день в этом месяце", trackedDaysThisMonth: "заполненных дней в этом месяце",
       addSecondHabit: "Добавь вторую привычку, чтобы сравнивать связи.", twoHabitsNeeded: "Нужны две привычки", pearsonTitle: "Корреляция Пирсона по дням, где заполнены обе привычки", sharedDays: "общих дней",
       notEnoughVariation: "недостаточно вариации", strong: "сильная", moderate: "средняя", weak: "слабая", little: "почти отсутствующая", relation: "связь", inverse: "обратная связь", positive: "положительная связь",
@@ -50,7 +50,7 @@
       newHabit: "Новая привычка", editHabit: "Редактировать привычку", hintPercent: "Вводишь процент напрямую. Можно записать 0%, 124%, 500% или любое другое неотрицательное значение.", hintBooleanNegative: "Негативная привычка: Да всё равно означает успешный день. Формулируй привычку как желаемое состояние — например «Не курить» → Да.", hintBoolean: "Да означает успешный день, Нет — невыполнение.", hintTargetNegative: "Негативная привычка: чем фактическое значение меньше, тем лучше. Дневная цель = 100%; ниже цели даёт больше 100%, выше цели — меньше 100%.", hintTarget: "Вводишь фактическое значение — процент считается автоматически. Чем больше относительно цели, тем лучше; верхнего лимита нет.",
       targetMustPositive: "Дневная цель должна быть больше 0", habitUpdated: "Привычка обновлена", habitCreated: "Привычка создана", deleteConfirm: "Удалить «{name}» и все заполненные дни?", habitDeleted: "Привычка удалена",
       percentage: "Процент", actualResult: "Фактический результат", chooseYesNo: "Выбери Да или Нет", daySaved: "День сохранён", dayCleared: "День очищен", backupExported: "Резервная копия экспортирована", importConfirm: "Импорт заменит текущие данные L manager. Продолжить?", backupImported: "Резервная копия импортирована", importFailed: "Не удалось импортировать файл",
-      language: "Язык", hideHabitInfo: "Скрыть информацию привычек", showHabitInfo: "Показать информацию привычек", hideVisualizationPanel: "Скрыть визуализацию", showVisualizationPanel: "Показать визуализацию", chooseColor: "Выбрать цвет", quickColors: "Быстрые цвета", sleep: "Сон", sleepSettings: "Настройки сна", sleepSettingsHint: "Эти поля используются только для встроенной привычки сна", sleepTargetDuration: "Целевая длительность", targetBedtime: "Цель отхода ко сну", targetWakeTime: "Цель подъёма", bedtime: "Лёг спать", wakeUp: "Проснулся", sleepDuration: "Длительность сна", sleepScore: "Оценка сна", sleepInvalidTimes: "Укажи время сна и пробуждения", sleepMeta: "цель {hours} ч · {bedtime} → {wake}", mood: "Настроение", moodScale: "Настроение · выбери состояние или подстрой процент", moodPercentage: "Процент настроения", moodFineTune: "Выбери состояние как базу, а затем при необходимости подстрой процент вручную.", veryUnpleasant: "Очень неприятно", unpleasant: "Неприятно", slightlyUnpleasant: "Слегка неприятно", neutral: "Нейтрально", slightlyPleasant: "Слегка приятно", pleasant: "Приятно", veryPleasant: "Очень приятно", monthMosaic: "Календарь месяца", monthMosaicDescription: "Каждый день смешивает цвета всех заполненных привычек", monthMosaicAria: "Общий цветовой календарь привычек за месяц"
+      language: "Язык", hideHabitInfo: "Скрыть информацию привычек", showHabitInfo: "Показать информацию привычек", hideVisualizationPanel: "Скрыть визуализацию", showVisualizationPanel: "Показать визуализацию", chooseColor: "Выбрать цвет", quickColors: "Быстрые цвета", sleep: "Сон", sleepSettings: "Настройки сна", sleepSettingsHint: "Эти поля используются только для встроенной привычки сна", sleepTargetDuration: "Целевая длительность", targetBedtime: "Цель отхода ко сну", targetWakeTime: "Цель подъёма", bedtime: "Лёг спать", wakeUp: "Проснулся", sleepDuration: "Длительность сна", sleepScore: "Оценка сна", sleepInvalidTimes: "Укажи время сна и пробуждения", sleepMeta: "цель {hours} ч · {bedtime} → {wake}", mood: "Настроение", moodScale: "Настроение · выбери состояние или подстрой процент", moodPercentage: "Процент настроения", moodFineTune: "Выбери состояние как базу, а затем при необходимости подстрой процент вручную.", veryUnpleasant: "Очень неприятно", unpleasant: "Неприятно", slightlyUnpleasant: "Слегка неприятно", neutral: "Нейтрально", slightlyPleasant: "Слегка приятно", pleasant: "Приятно", veryPleasant: "Очень приятно", monthMosaic: "Календарь месяца", monthMosaicDescription: "Каждый день смешивает цвета всех заполненных привычек", monthMosaicAria: "Общий цветовой календарь привычек за месяц", sleepWindow: "Окно сна", sleepWindowDescription: "Время засыпания и подъёма · заливка показывает время сна", sleepTime: "Засыпание", wakeTimeLabel: "Подъём", studySessions: "Учебные сессии", studyPeriods: "Периоды учёбы", studyPeriodsHint: "Добавляй каждый блок учёбы. Перерывы автоматически вычитаются.", addStudyPeriod: "+ Период", studyStart: "Начало", studyEnd: "Конец", studyBreaks: "Перерывы", minutesShort: "мин", removePeriod: "Удалить", studyHint: "Укажи один или несколько периодов. Итог дня — чистое время учёбы без перерывов.", studyInvalidPeriod: "Проверь время периодов и перерывы", studyLegacy: "Старая запись: {hours} ч · добавь периоды, чтобы заменить её", netStudyTime: "Чистое время учёбы"
     }
   };
 
@@ -134,6 +134,8 @@
     monthMosaic: document.querySelector("#monthMosaic"),
     insightKpis: document.querySelector("#insightKpis"),
     habitTrendChart: document.querySelector("#habitTrendChart"),
+    sleepWindowSection: document.querySelector("#sleepWindowSection"),
+    sleepWindowChart: document.querySelector("#sleepWindowChart"),
     trendCaption: document.querySelector("#trendCaption"),
     habitComparison: document.querySelector("#habitComparison"),
     relationPairControls: document.querySelector("#relationPairControls"),
@@ -185,6 +187,10 @@
     entrySliderMin: document.querySelector("#entrySliderMin"),
     entrySliderMax: document.querySelector("#entrySliderMax"),
     sleepEntry: document.querySelector("#sleepEntry"),
+    studyEntry: document.querySelector("#studyEntry"),
+    studyPeriodsList: document.querySelector("#studyPeriodsList"),
+    addStudyPeriodBtn: document.querySelector("#addStudyPeriodBtn"),
+    studyLegacyValue: document.querySelector("#studyLegacyValue"),
     entryBedtime: document.querySelector("#entryBedtime"),
     entryWakeTime: document.querySelector("#entryWakeTime"),
     moodEntry: document.querySelector("#moodEntry"),
@@ -288,16 +294,18 @@
         }
         if (!hadNegativeFlag || Object.prototype.hasOwnProperty.call(habit, "negativeTarget")) migrated = true;
 
-        const isLegacyMood = habit.trackingType === "percent" && String(habit.name || "").trim().toLowerCase() === "mood";
-        if (isLegacyMood) migrated = true;
+        const normalizedName = String(habit.name || "").trim().toLowerCase();
+        const isLegacyMood = habit.trackingType === "percent" && normalizedName === "mood";
+        const isLegacyStudy = habit.trackingType === "target" && normalizedName === "studying";
+        if (isLegacyMood || isLegacyStudy) migrated = true;
 
-        const normalizedTrackingType = isLegacyMood ? "mood" : habit.trackingType;
+        const normalizedTrackingType = isLegacyMood ? "mood" : isLegacyStudy ? "study" : habit.trackingType;
         const normalized = {
           ...habit,
           trackingType: normalizedTrackingType,
-          negativeHabit: normalizedTrackingType === "mood" ? false : negativeHabit,
+          negativeHabit: normalizedTrackingType === "mood" || normalizedTrackingType === "study" ? false : negativeHabit,
           target: normalizedTrackingType === "boolean" ? 1 : normalizedTrackingType === "mood" ? 100 : habit.target,
-          unit: normalizedTrackingType === "mood" ? "%" : habit.unit,
+          unit: normalizedTrackingType === "mood" ? "%" : normalizedTrackingType === "study" ? "h" : habit.unit,
         };
         delete normalized.negativeTarget;
         return normalized;
@@ -471,6 +479,23 @@
     }
     els.entryBedtime.addEventListener("input", updateEntryPreview);
     els.entryWakeTime.addEventListener("input", updateEntryPreview);
+    els.addStudyPeriodBtn?.addEventListener("click", () => addStudyPeriod());
+    els.studyPeriodsList?.addEventListener("input", updateEntryPreview);
+    els.studyPeriodsList?.addEventListener("click", (event) => {
+      const remove = event.target.closest("[data-study-remove]");
+      if (!remove) return;
+      const row = remove.closest("[data-study-period-row]");
+      if (!row) return;
+      const rows = els.studyPeriodsList.querySelectorAll("[data-study-period-row]");
+      if (rows.length <= 1) {
+        row.querySelectorAll("input").forEach((input) => { input.value = input.type === "number" ? "0" : ""; });
+      } else {
+        row.remove();
+        renumberStudyPeriods();
+      }
+      els.studyLegacyValue && (els.studyLegacyValue.hidden = true);
+      updateEntryPreview();
+    });
     [els.entryYesBtn, els.entryNoBtn].forEach((button) => {
       button.addEventListener("click", () => setBooleanEntry(Number(button.dataset.booleanValue)));
     });
@@ -768,8 +793,19 @@
 
     els.allHabitsHeatmap.innerHTML = renderAllHabitsHeatmap(viewDate);
     if (els.monthMosaic) els.monthMosaic.innerHTML = renderMonthMosaic(viewDate);
-    els.trendCaption.textContent = t("currentMonthTarget", { month: formatMonth(viewDate) });
+    els.trendCaption.textContent = habit.trackingType === "sleep"
+      ? t("sleepDurationTrendTarget", {
+          month: formatMonth(viewDate),
+          duration: formatSleepDuration(Number(habit.sleepTargetMinutes || habit.target || 480)),
+        })
+      : t("currentMonthTarget", { month: formatMonth(viewDate) });
     els.habitTrendChart.innerHTML = renderTrendChart(habit, viewDate);
+    if (els.sleepWindowSection && els.sleepWindowChart) {
+      const showSleepWindow = habit.trackingType === "sleep";
+      els.sleepWindowSection.hidden = !showSleepWindow;
+      els.sleepWindowSection.style.display = showSleepWindow ? "grid" : "none";
+      els.sleepWindowChart.innerHTML = showSleepWindow ? renderSleepWindowChart(habit, viewDate) : "";
+    }
     renderRelations();
     els.habitComparison.innerHTML = renderHabitComparison(viewDate);
   }
@@ -930,7 +966,7 @@
     for (let day = 1; day <= days; day += 1) {
       const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
       const entry = state.entries[entryKey(habit.id, dateKey)];
-      values.push(entry ? getEntryPercent(habit, entry) : null);
+      values.push(entry ? getVisualizationPercent(habit, entry) : null);
     }
 
     const trackedValues = values.filter((value) => value != null && Number.isFinite(value));
@@ -994,7 +1030,12 @@
       if (value == null || !Number.isFinite(value)) return "";
       const x = xFor(index);
       const y = yFor(value);
-      return `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="3.25" fill="${habit.color}" stroke="#111319" stroke-width="1.6"><title>${t("day")} ${index + 1}: ${formatPercent(value)}%</title></circle>`;
+      const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(index + 1).padStart(2, "0")}`;
+      const entry = state.entries[entryKey(habit.id, dateKey)];
+      const tooltipValue = habit.trackingType === "sleep"
+        ? `${formatSleepDuration(getSleepDurationMinutes(entry))} · ${formatPercent(value)}%`
+        : `${formatPercent(value)}%`;
+      return `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="3.25" fill="${habit.color}" stroke="#111319" stroke-width="1.6"><title>${t("day")} ${index + 1}: ${tooltipValue}</title></circle>`;
     }).join("");
 
     const midDay = Math.ceil(days / 2);
@@ -1016,6 +1057,126 @@
         ${xLabels}
         ${empty}
       </svg>`;
+  }
+
+  function unwrapSleepBedtimeMinutes(time) {
+    const minutes = parseTimeToMinutes(time);
+    if (minutes == null) return null;
+    return minutes < 12 * 60 ? minutes + 24 * 60 : minutes;
+  }
+
+  function formatUnwrappedClock(minutes) {
+    if (!Number.isFinite(minutes)) return "—";
+    const wrapped = ((Math.round(minutes) % (24 * 60)) + 24 * 60) % (24 * 60);
+    const hours = Math.floor(wrapped / 60);
+    const mins = wrapped % 60;
+    return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
+  }
+
+  function renderSleepWindowChart(habit, date) {
+    const width = 336;
+    const height = 218;
+    const pad = { left: 40, right: 10, top: 30, bottom: 25 };
+    const days = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+    const points = [];
+
+    for (let day = 1; day <= days; day += 1) {
+      const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      const entry = state.entries[entryKey(habit.id, dateKey)];
+      if (!entry?.bedtime || !entry?.wakeTime) {
+        points.push(null);
+        continue;
+      }
+      const bedtime = unwrapSleepBedtimeMinutes(entry.bedtime);
+      const duration = getSleepDurationMinutes(entry);
+      if (!Number.isFinite(bedtime) || !Number.isFinite(duration)) {
+        points.push(null);
+        continue;
+      }
+      points.push({ day, dateKey, entry, bedtime, wake: bedtime + duration, duration });
+    }
+
+    const targetBed = unwrapSleepBedtimeMinutes(habit.sleepTargetBedtime || "23:30");
+    const targetClockDuration = getSleepDurationMinutes({ bedtime: habit.sleepTargetBedtime || "23:30", wakeTime: habit.sleepTargetWake || "07:30" });
+    const targetWake = Number.isFinite(targetBed) && Number.isFinite(targetClockDuration) ? targetBed + targetClockDuration : null;
+    const finiteTimes = points.filter(Boolean).flatMap((point) => [point.bedtime, point.wake]);
+    if (Number.isFinite(targetBed)) finiteTimes.push(targetBed);
+    if (Number.isFinite(targetWake)) finiteTimes.push(targetWake);
+
+    const baselineMin = 18 * 60;
+    const baselineMax = 36 * 60;
+    const rawMin = finiteTimes.length ? Math.min(...finiteTimes, baselineMin) : baselineMin;
+    const rawMax = finiteTimes.length ? Math.max(...finiteTimes, baselineMax) : baselineMax;
+    const yMin = Math.floor(rawMin / 120) * 120;
+    const yMax = Math.ceil(rawMax / 120) * 120;
+    const innerW = width - pad.left - pad.right;
+    const innerH = height - pad.top - pad.bottom;
+    const xForDay = (day) => pad.left + (days === 1 ? 0 : ((day - 1) / (days - 1)) * innerW);
+    const yForTime = (value) => pad.top + ((value - yMin) / (yMax - yMin)) * innerH;
+
+    const ticks = [];
+    for (let tick = yMin; tick <= yMax; tick += 240) ticks.push(tick);
+    if (ticks[ticks.length - 1] !== yMax && yMax - ticks[ticks.length - 1] >= 90) ticks.push(yMax);
+    const grid = ticks.map((tick) => {
+      const y = yForTime(tick);
+      return `<line x1="${pad.left}" y1="${y.toFixed(2)}" x2="${width - pad.right}" y2="${y.toFixed(2)}" class="chart-grid" />
+        <text x="${pad.left - 7}" y="${(y + 3).toFixed(2)}" text-anchor="end" class="chart-axis-label">${formatUnwrappedClock(tick)}</text>`;
+    }).join("");
+
+    const contiguous = [];
+    let run = [];
+    points.forEach((point) => {
+      if (!point) {
+        if (run.length) contiguous.push(run);
+        run = [];
+      } else {
+        run.push(point);
+      }
+    });
+    if (run.length) contiguous.push(run);
+
+    const areas = contiguous.map((segment) => {
+      if (segment.length < 2) return "";
+      const top = segment.map((point) => `${xForDay(point.day).toFixed(2)},${yForTime(point.bedtime).toFixed(2)}`);
+      const bottom = [...segment].reverse().map((point) => `${xForDay(point.day).toFixed(2)},${yForTime(point.wake).toFixed(2)}`);
+      return `<polygon points="${[...top, ...bottom].join(" ")}" fill="${habit.color}" opacity="0.15" />`;
+    }).join("");
+
+    const lineFor = (key, extra = "") => contiguous.map((segment) => segment.length > 1
+      ? `<polyline points="${segment.map((point) => `${xForDay(point.day).toFixed(2)},${yForTime(point[key]).toFixed(2)}`).join(" ")}" fill="none" stroke="${habit.color}" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" ${extra} />`
+      : "").join("");
+    const bedtimeLine = lineFor("bedtime");
+    const wakeLine = lineFor("wake", 'opacity="0.68" stroke-dasharray="4 3"');
+
+    const targetLines = [
+      Number.isFinite(targetBed) ? { value: targetBed, label: `${t("sleepTime")} ${habit.sleepTargetBedtime || "23:30"}` } : null,
+      Number.isFinite(targetWake) ? { value: targetWake, label: `${t("wakeTimeLabel")} ${habit.sleepTargetWake || "07:30"}` } : null,
+    ].filter(Boolean).map((item) => {
+      const y = yForTime(item.value);
+      return `<line x1="${pad.left}" y1="${y.toFixed(2)}" x2="${width - pad.right}" y2="${y.toFixed(2)}" class="sleep-target-time-line"><title>${escapeHtml(item.label)}</title></line>`;
+    }).join("");
+
+    const dots = points.map((point) => {
+      if (!point) return "";
+      const x = xForDay(point.day);
+      const bedY = yForTime(point.bedtime);
+      const wakeY = yForTime(point.wake);
+      const title = `${t("day")} ${point.day} · ${t("sleepTime")}: ${point.entry.bedtime} · ${t("wakeTimeLabel")}: ${point.entry.wakeTime} · ${formatSleepDuration(point.duration)}`;
+      return `<circle cx="${x.toFixed(2)}" cy="${bedY.toFixed(2)}" r="2.7" fill="${habit.color}" stroke="#111319" stroke-width="1.2"><title>${escapeHtml(title)}</title></circle>
+        <circle cx="${x.toFixed(2)}" cy="${wakeY.toFixed(2)}" r="2.7" fill="${habit.color}" opacity="0.72" stroke="#111319" stroke-width="1.2"><title>${escapeHtml(title)}</title></circle>`;
+    }).join("");
+
+    const midDay = Math.ceil(days / 2);
+    const xLabels = [1, midDay, days].map((day) => `<text x="${xForDay(day).toFixed(2)}" y="${height - 6}" text-anchor="middle" class="chart-axis-label">${day}</text>`).join("");
+    const legend = `<g class="sleep-window-legend">
+      <line x1="${pad.left}" y1="11" x2="${pad.left + 16}" y2="11" stroke="${habit.color}" stroke-width="2.2" /><text x="${pad.left + 21}" y="14" class="chart-axis-label">${escapeHtml(t("sleepTime"))}</text>
+      <line x1="${pad.left + 94}" y1="11" x2="${pad.left + 110}" y2="11" stroke="${habit.color}" stroke-width="2.2" opacity=".68" stroke-dasharray="4 3" /><text x="${pad.left + 115}" y="14" class="chart-axis-label">${escapeHtml(t("wakeTimeLabel"))}</text>
+    </g>`;
+    const empty = points.some(Boolean) ? "" : `<text x="${width / 2}" y="${height / 2}" text-anchor="middle" class="chart-empty-label">${t("noTrackedDays")}</text>`;
+
+    return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(t("sleepWindow"))}">
+      ${legend}${grid}${targetLines}${areas}${bedtimeLine}${wakeLine}${dots}${xLabels}${empty}
+    </svg>`;
   }
 
   function ensureRelationHabits() {
@@ -1201,7 +1362,7 @@
       for (let day = 1; day <= days; day += 1) {
         const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
         const entry = state.entries[entryKey(habit.id, dateKey)];
-        values.push(entry ? getEntryPercent(habit, entry) : null);
+        values.push(entry ? getVisualizationPercent(habit, entry) : null);
       }
       return { habit, values };
     });
@@ -1444,7 +1605,7 @@
 
     els.habitName.value = habit?.name || "";
     els.habitTrackingType.value = habit?.trackingType || "target";
-    els.habitTarget.value = habit?.trackingType === "target" ? String(habit.target ?? 1) : "1";
+    els.habitTarget.value = habit?.trackingType === "target" || habit?.trackingType === "study" ? String(habit.target ?? 1) : "1";
     els.habitTarget.disabled = false;
     els.habitTarget.readOnly = false;
     els.habitNegative.checked = Boolean(habit?.negativeHabit);
@@ -1477,16 +1638,17 @@
     const isPercent = type === "percent";
     const isMood = type === "mood";
     const isSleep = type === "sleep";
+    const isStudy = type === "study";
     const isNegative = els.habitNegative.checked;
 
     els.trackingTypeField.hidden = isSleep;
     els.trackingTypeField.style.display = isSleep ? "none" : "flex";
 
-    els.targetValueField.hidden = !isTarget;
-    els.targetValueField.style.display = isTarget ? "flex" : "none";
+    els.targetValueField.hidden = !(isTarget || isStudy);
+    els.targetValueField.style.display = isTarget || isStudy ? "flex" : "none";
     els.unitField.hidden = !isTarget;
     els.unitField.style.display = isTarget ? "flex" : "none";
-    els.habitTarget.required = isTarget;
+    els.habitTarget.required = isTarget || isStudy;
     // Daily target is hidden for non-target habits, so it must never be disabled.
     // Keeping it enabled avoids a stale disabled state when editing an existing target habit.
     els.habitTarget.disabled = false;
@@ -1498,12 +1660,14 @@
     els.sleepTargetBedtime.required = isSleep;
     els.sleepTargetWake.required = isSleep;
 
-    els.negativeHabitField.hidden = isPercent || isMood || isSleep;
-    els.negativeHabitField.style.display = isPercent || isMood || isSleep ? "none" : "grid";
-    if (isPercent || isMood || isSleep) els.habitNegative.checked = false;
+    els.negativeHabitField.hidden = isPercent || isMood || isSleep || isStudy;
+    els.negativeHabitField.style.display = isPercent || isMood || isSleep || isStudy ? "none" : "grid";
+    if (isPercent || isMood || isSleep || isStudy) els.habitNegative.checked = false;
 
     if (isSleep) {
       els.trackingHint.textContent = t("sleepSettingsHint");
+    } else if (isStudy) {
+      els.trackingHint.textContent = t("studyHint");
     } else if (isMood) {
       els.trackingHint.textContent = t("moodFineTune");
     } else if (isPercent) {
@@ -1518,8 +1682,9 @@
   }
 
   function saveHabitFromForm(event) {
-    event.preventDefault();
-    const id = els.habitId.value || createId("habit");
+    event?.preventDefault();
+    try {
+      const id = els.habitId.value || createId("habit");
     const trackingType = els.habitTrackingType.value;
     const target = Number(els.habitTarget.value);
     const sleepTargetHours = Number(els.sleepTargetHours.value);
@@ -1527,7 +1692,7 @@
     const previous = state.habits.find((item) => item.id === id);
 
     if (!els.habitName.value.trim()) return;
-    if (trackingType === "target" && (!Number.isFinite(target) || target <= 0)) {
+    if ((trackingType === "target" || trackingType === "study") && (!Number.isFinite(target) || target <= 0)) {
       showToast(t("targetMustPositive"));
       return;
     }
@@ -1541,9 +1706,9 @@
       id,
       name: els.habitName.value.trim(),
       trackingType,
-      target: trackingType === "target" ? target : trackingType === "boolean" ? 1 : trackingType === "sleep" ? sleepTargetMinutes : 100,
-      negativeHabit: trackingType === "percent" || trackingType === "mood" || trackingType === "sleep" ? false : els.habitNegative.checked,
-      unit: trackingType === "target" ? els.habitUnit.value.trim() : trackingType === "percent" || trackingType === "mood" ? "%" : trackingType === "sleep" ? "h" : "",
+      target: trackingType === "target" || trackingType === "study" ? target : trackingType === "boolean" ? 1 : trackingType === "sleep" ? sleepTargetMinutes : 100,
+      negativeHabit: trackingType === "percent" || trackingType === "mood" || trackingType === "sleep" || trackingType === "study" ? false : els.habitNegative.checked,
+      unit: trackingType === "target" ? els.habitUnit.value.trim() : trackingType === "study" ? "h" : trackingType === "percent" || trackingType === "mood" ? "%" : trackingType === "sleep" ? "h" : "",
       color,
       createdAt: previous?.createdAt || new Date().toISOString(),
       ...(trackingType === "sleep" ? {
@@ -1558,10 +1723,14 @@
     if (index >= 0) state.habits[index] = habit;
     else state.habits.push(habit);
 
-    saveState();
-    closeModal(els.habitModal);
-    render();
-    showToast(index >= 0 ? t("habitUpdated") : t("habitCreated"));
+      saveState();
+      closeModal(els.habitModal);
+      render();
+      showToast(index >= 0 ? t("habitUpdated") : t("habitCreated"));
+    } catch (error) {
+      console.error("L manager: failed to save habit", error);
+      showToast(getLanguage() === "ru" ? "Не удалось сохранить привычку" : "Could not save habit");
+    }
   }
 
   function deleteCurrentHabit() {
@@ -1580,6 +1749,80 @@
     showToast(t("habitDeleted"));
   }
 
+  function studyPeriodDurationMinutes(period) {
+    if (!period) return null;
+    const start = parseTimeToMinutes(period.start);
+    const end = parseTimeToMinutes(period.end);
+    const breaks = Number(period.breakMinutes || 0);
+    if (start == null || end == null || !Number.isFinite(breaks) || breaks < 0) return null;
+    let gross = end - start;
+    if (gross <= 0) gross += 24 * 60;
+    if (gross <= 0 || gross > 24 * 60 || breaks >= gross) return null;
+    return gross - breaks;
+  }
+
+  function getStudyNetMinutes(sessions) {
+    if (!Array.isArray(sessions) || !sessions.length) return null;
+    let total = 0;
+    for (const session of sessions) {
+      const duration = studyPeriodDurationMinutes(session);
+      if (!Number.isFinite(duration)) return null;
+      total += duration;
+    }
+    return total;
+  }
+
+  function renderStudyPeriodRow(period = {}, index = 0) {
+    const breakMinutes = Number.isFinite(Number(period.breakMinutes)) ? Math.max(0, Number(period.breakMinutes)) : 0;
+    return `<div class="study-period-row" data-study-period-row>
+      <span class="study-period-index">${index + 1}</span>
+      <label class="field study-time-field"><span>${t("studyStart")}</span><input type="time" data-study-start value="${escapeHtml(period.start || "")}" /></label>
+      <label class="field study-time-field"><span>${t("studyEnd")}</span><input type="time" data-study-end value="${escapeHtml(period.end || "")}" /></label>
+      <label class="field study-break-field"><span>${t("studyBreaks")}</span><div class="value-input-wrap"><input type="number" data-study-break min="0" step="1" value="${breakMinutes}" /><span class="input-unit">${t("minutesShort")}</span></div></label>
+      <button class="icon-button study-remove-period" type="button" data-study-remove title="${escapeHtml(t("removePeriod"))}" aria-label="${escapeHtml(t("removePeriod"))}">×</button>
+    </div>`;
+  }
+
+  function renderStudySessionEditor(entry = null) {
+    if (!els.studyPeriodsList) return;
+    const sessions = Array.isArray(entry?.sessions) ? entry.sessions : [];
+    els.studyPeriodsList.innerHTML = sessions.length
+      ? sessions.map((session, index) => renderStudyPeriodRow(session, index)).join("")
+      : renderStudyPeriodRow({}, 0);
+    const legacyValue = Number(entry?.value);
+    const isLegacy = Boolean(entry) && !sessions.length && Number.isFinite(legacyValue);
+    if (els.studyLegacyValue) {
+      els.studyLegacyValue.hidden = !isLegacy;
+      els.studyLegacyValue.textContent = isLegacy ? t("studyLegacy", { hours: formatNumber(legacyValue) }) : "";
+    }
+  }
+
+  function renumberStudyPeriods() {
+    els.studyPeriodsList?.querySelectorAll("[data-study-period-row]").forEach((row, index) => {
+      const label = row.querySelector(".study-period-index");
+      if (label) label.textContent = String(index + 1);
+    });
+  }
+
+  function addStudyPeriod(period = {}) {
+    if (!els.studyPeriodsList) return;
+    const index = els.studyPeriodsList.querySelectorAll("[data-study-period-row]").length;
+    els.studyPeriodsList.insertAdjacentHTML("beforeend", renderStudyPeriodRow(period, index));
+    els.studyLegacyValue && (els.studyLegacyValue.hidden = true);
+    updateEntryPreview();
+  }
+
+  function collectStudySessions() {
+    if (!els.studyPeriodsList) return [];
+    return [...els.studyPeriodsList.querySelectorAll("[data-study-period-row]")]
+      .map((row) => ({
+        start: row.querySelector("[data-study-start]")?.value || "",
+        end: row.querySelector("[data-study-end]")?.value || "",
+        breakMinutes: Math.max(0, Number(row.querySelector("[data-study-break]")?.value || 0)),
+      }))
+      .filter((session) => session.start || session.end);
+  }
+
   function openEntryModal(habitId, dateKey) {
     const habit = state.habits.find((item) => item.id === habitId);
     if (!habit) return;
@@ -1590,12 +1833,13 @@
     els.entryDate.value = dateKey;
     els.entryDateLabel.textContent = formatDate(date);
     els.entryModalTitle.textContent = habit.name;
-    els.entryValue.value = habit.trackingType === "boolean" || habit.trackingType === "sleep" ? "" : (entry?.value ?? "");
+    els.entryValue.value = habit.trackingType === "boolean" || habit.trackingType === "sleep" || habit.trackingType === "study" ? "" : (entry?.value ?? "");
     els.entryBedtime.value = entry?.bedtime || "";
     els.entryWakeTime.value = entry?.wakeTime || "";
     els.entryNote.value = entry?.note || "";
     els.clearEntryBtn.hidden = !entry;
     syncEntryTrackingFields(habit);
+    if (habit.trackingType === "study") renderStudySessionEditor(entry);
     configureEntrySlider(habit, entry?.value);
     els.booleanEntry.dataset.value = habit.trackingType === "boolean" && entry ? String(Number(entry.value) === 1 ? 1 : 0) : "";
     syncBooleanButtons();
@@ -1621,6 +1865,7 @@
     openModal(els.entryModal);
     setTimeout(() => {
       if (habit.trackingType === "sleep") els.entryBedtime.focus();
+      else if (habit.trackingType === "study") els.studyPeriodsList?.querySelector("[data-study-start]")?.focus();
       else if (habit.trackingType !== "boolean") els.entryValue.focus();
     }, 30);
   }
@@ -1629,13 +1874,14 @@
     const isBoolean = habit.trackingType === "boolean";
     const isMood = habit.trackingType === "mood";
     const isSleep = habit.trackingType === "sleep";
+    const isStudy = habit.trackingType === "study";
 
     els.entryValueSlider?.classList.toggle("mood-slider", isMood);
 
-    els.entryValueField.hidden = isBoolean || isSleep;
-    els.entryValueField.style.display = isBoolean || isSleep ? "none" : "flex";
-    if (els.entryValueSliderWrap) els.entryValueSliderWrap.hidden = isBoolean || isSleep;
-    els.entryValue.required = !isBoolean && !isSleep;
+    els.entryValueField.hidden = isBoolean || isSleep || isStudy;
+    els.entryValueField.style.display = isBoolean || isSleep || isStudy ? "none" : "flex";
+    if (els.entryValueSliderWrap) els.entryValueSliderWrap.hidden = isBoolean || isSleep || isStudy;
+    els.entryValue.required = !isBoolean && !isSleep && !isStudy;
 
     if (els.moodEntry) {
       els.moodEntry.hidden = !isMood;
@@ -1647,12 +1893,16 @@
 
     els.sleepEntry.hidden = !isSleep;
     els.sleepEntry.style.display = isSleep ? "grid" : "none";
+    if (els.studyEntry) {
+      els.studyEntry.hidden = !isStudy;
+      els.studyEntry.style.display = isStudy ? "grid" : "none";
+    }
     els.entryBedtime.required = isSleep;
     els.entryWakeTime.required = isSleep;
   }
 
   function configureEntrySlider(habit, currentValue = null) {
-    if (!habit || habit.trackingType === "boolean" || habit.trackingType === "sleep" || !els.entryValueSlider || !els.entrySliderMin || !els.entrySliderMax) return;
+    if (!habit || habit.trackingType === "boolean" || habit.trackingType === "sleep" || habit.trackingType === "study" || !els.entryValueSlider || !els.entrySliderMin || !els.entrySliderMax) return;
 
     const current = Number(currentValue);
     const finiteCurrent = Number.isFinite(current) && current >= 0 ? current : 0;
@@ -1686,7 +1936,7 @@
 
   function syncEntrySliderFromValue() {
     const habit = state.habits.find((item) => item.id === els.entryHabitId.value);
-    if (!habit || habit.trackingType === "boolean" || habit.trackingType === "sleep" || !els.entryValueSlider || !els.entrySliderMax) return;
+    if (!habit || habit.trackingType === "boolean" || habit.trackingType === "sleep" || habit.trackingType === "study" || !els.entryValueSlider || !els.entrySliderMax) return;
 
     const raw = Number(els.entryValue.value);
     if (!Number.isFinite(raw) || raw < 0) {
@@ -1793,6 +2043,25 @@
       return;
     }
 
+    if (habit.trackingType === "study") {
+      const sessions = collectStudySessions();
+      const netMinutes = getStudyNetMinutes(sessions);
+      if (!sessions.length || !Number.isFinite(netMinutes)) {
+        const existing = state.entries[entryKey(habit.id, els.entryDate.value)];
+        const legacy = Number(existing?.value);
+        els.entryPercentPreview.textContent = Number.isFinite(legacy) && !Array.isArray(existing?.sessions)
+          ? `${formatNumber(legacy)} h`
+          : "—";
+        return;
+      }
+      const hours = netMinutes / 60;
+      const percent = getEntryPercent(habit, { value: hours });
+      els.entryPercentPreview.textContent = showPercentages
+        ? `${formatSleepDuration(netMinutes)} · ${formatPercent(percent)}%`
+        : formatSleepDuration(netMinutes);
+      return;
+    }
+
     if (habit.trackingType === "boolean") {
       const selected = els.booleanEntry.dataset.value;
       if (selected !== "1" && selected !== "0") {
@@ -1851,6 +2120,33 @@
         note: els.entryNote.value.trim(),
         updatedAt: new Date().toISOString(),
       };
+    } else if (habit.trackingType === "study") {
+      const sessions = collectStudySessions();
+      const existing = state.entries[entryKey(habitId, dateKey)];
+      if (!sessions.length) {
+        const legacyValue = Number(existing?.value);
+        if (!Number.isFinite(legacyValue)) {
+          showToast(t("studyInvalidPeriod"));
+          return;
+        }
+        entry = {
+          ...existing,
+          note: els.entryNote.value.trim(),
+          updatedAt: new Date().toISOString(),
+        };
+      } else {
+        const netMinutes = getStudyNetMinutes(sessions);
+        if (!Number.isFinite(netMinutes)) {
+          showToast(t("studyInvalidPeriod"));
+          return;
+        }
+        entry = {
+          value: netMinutes / 60,
+          sessions,
+          note: els.entryNote.value.trim(),
+          updatedAt: new Date().toISOString(),
+        };
+      }
     } else if (habit.trackingType === "boolean") {
       if (els.booleanEntry.dataset.value !== "1" && els.booleanEntry.dataset.value !== "0") {
         showToast(t("chooseYesNo"));
@@ -1941,6 +2237,16 @@
   function formatSleepHours(hours) {
     if (!Number.isFinite(hours)) return "8";
     return Number(hours.toFixed(2)).toString();
+  }
+
+  function getVisualizationPercent(habit, entry) {
+    if (!entry) return null;
+    if (habit.trackingType !== "sleep") return getEntryPercent(habit, entry);
+
+    const duration = getSleepDurationMinutes(entry);
+    const targetDuration = Number(habit.sleepTargetMinutes || habit.target || 480);
+    if (!Number.isFinite(duration) || !Number.isFinite(targetDuration) || targetDuration <= 0) return null;
+    return (duration / targetDuration) * 100;
   }
 
   function getEntryPercent(habit, entry) {
@@ -2109,7 +2415,16 @@
         : incoming.settings?.language === "ru"
           ? "ru"
           : getLanguage();
-      state.habits = incoming.habits;
+      state.habits = incoming.habits.map((habit) => {
+        const normalizedName = String(habit?.name || "").trim().toLowerCase();
+        if (habit?.trackingType === "target" && normalizedName === "studying") {
+          return { ...habit, trackingType: "study", negativeHabit: false, unit: "h" };
+        }
+        if (habit?.trackingType === "percent" && normalizedName === "mood") {
+          return { ...habit, trackingType: "mood", negativeHabit: false, target: 100, unit: "%" };
+        }
+        return habit;
+      });
       if (incoming.settings?.sleepFeatureInitialized !== true && !state.habits.some((habit) => habit.trackingType === "sleep")) {
         state.habits.unshift(createDefaultSleepHabit(importedLanguage));
       }
