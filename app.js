@@ -3,7 +3,7 @@
 
   const STORAGE_KEY = "l-manager:data:v1";
   const MIGRATION_BACKUP_KEY = "l-manager:data:backup:pre-sleep-v0.5.1";
-  const APP_VERSION = "0.6.13";
+  const APP_VERSION = "0.6.17";
 
   const I18N = {
     en: {
@@ -131,12 +131,9 @@
     insightsToggleBtn: document.querySelector("#insightsToggleBtn"),
     visualHabitSelect: document.querySelector("#visualHabitSelect"),
     allHabitsHeatmap: document.querySelector("#allHabitsHeatmap"),
-    monthMosaic: document.querySelector("#monthMosaic"),
     insightKpis: document.querySelector("#insightKpis"),
-    habitTrendChart: document.querySelector("#habitTrendChart"),
     sleepWindowSection: document.querySelector("#sleepWindowSection"),
     sleepWindowChart: document.querySelector("#sleepWindowChart"),
-    trendCaption: document.querySelector("#trendCaption"),
     habitComparison: document.querySelector("#habitComparison"),
     relationPairControls: document.querySelector("#relationPairControls"),
     relationOverlayControls: document.querySelector("#relationOverlayControls"),
@@ -792,14 +789,6 @@
       <div class="insight-kpi"><span>${t("bestStreak")}</span><strong>${bestStreak} ${dayWord(bestStreak)}</strong></div>`;
 
     els.allHabitsHeatmap.innerHTML = renderAllHabitsHeatmap(viewDate);
-    if (els.monthMosaic) els.monthMosaic.innerHTML = renderMonthMosaic(viewDate);
-    els.trendCaption.textContent = habit.trackingType === "sleep"
-      ? t("sleepDurationTrendTarget", {
-          month: formatMonth(viewDate),
-          duration: formatSleepDuration(Number(habit.sleepTargetMinutes || habit.target || 480)),
-        })
-      : t("currentMonthTarget", { month: formatMonth(viewDate) });
-    els.habitTrendChart.innerHTML = renderTrendChart(habit, viewDate);
     if (els.sleepWindowSection && els.sleepWindowChart) {
       const showSleepWindow = habit.trackingType === "sleep";
       els.sleepWindowSection.hidden = !showSleepWindow;

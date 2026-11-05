@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="dark" />
-  <title>l-manager — v0.6.13</title>
+  <title>l-manager — v0.6.17</title>
   <link rel="stylesheet" href="styles.css" />
   <style>
     .sleep-window-section { display:grid; gap:7px; margin-top:10px; }
@@ -109,53 +109,40 @@
             </div>
           </div>
 
-          <section class="all-habits-heatmap-block">
-            <div class="insight-section-heading">
+          <div class="insights-top-grid">
+            <section class="all-habits-heatmap-block dashboard-card">
+              <div class="insight-section-heading">
+                <div>
+                  <h3 data-i18n="habitHistory">Habit history</h3>
+                  <p data-i18n="habitHistoryDescription">One row per habit · dated daily history</p>
+                </div>
+              </div>
+              <div class="habit-matrix-scroll">
+                <div id="allHabitsHeatmap" class="habit-matrix" data-i18n-aria-label="habitHistoryMatrix" aria-label="Habit history matrix"></div>
+              </div>
+            </section>
+
+            <div class="overview-summary dashboard-card">
+              <label class="insight-select-field">
+                <span data-i18n="habit">Habit</span>
+                <select id="visualHabitSelect"></select>
+              </label>
+              <div id="insightKpis" class="insight-kpis"></div>
+            </div>
+          </div>
+
+          <div class="insights-main-grid">
+          <section id="sleepWindowSection" class="insight-section sleep-window-section dashboard-card" hidden>
+            <div class="insight-section-heading sleep-window-heading">
               <div>
-                <h3 data-i18n="habitHistory">Habit history</h3>
-                <p data-i18n="habitHistoryDescription">One row per habit · dated daily history</p>
+                <h3 data-i18n="sleepWindow">Sleep window</h3>
+                <p data-i18n="sleepWindowDescription">Sleep and wake times · shaded area is time asleep</p>
               </div>
             </div>
-            <div class="habit-matrix-scroll">
-              <div id="allHabitsHeatmap" class="habit-matrix" data-i18n-aria-label="habitHistoryMatrix" aria-label="Habit history matrix"></div>
-            </div>
+            <div id="sleepWindowChart" class="habit-trend-chart sleep-window-chart"></div>
           </section>
 
-          <section class="insight-section month-mosaic-section">
-            <div class="insight-section-heading">
-              <div>
-                <h3 data-i18n="monthMosaic">Month mosaic</h3>
-                <p data-i18n="monthMosaicDescription">Each day blends the colours of all tracked habits</p>
-              </div>
-            </div>
-            <div id="monthMosaic" class="month-mosaic" data-i18n-aria-label="monthMosaicAria" aria-label="Monthly combined habit colour calendar"></div>
-          </section>
-
-          <label class="insight-select-field">
-            <span data-i18n="habit">Habit</span>
-            <select id="visualHabitSelect"></select>
-          </label>
-
-          <div id="insightKpis" class="insight-kpis"></div>
-
-          <section class="insight-section">
-            <div class="insight-section-heading">
-              <div>
-                <h3 data-i18n="dailyProgress">Daily progress</h3>
-                <p id="trendCaption">Current month · target line at 100%</p>
-              </div>
-            </div>
-            <div id="habitTrendChart" class="habit-trend-chart"></div>
-            <div id="sleepWindowSection" class="sleep-window-section" hidden>
-              <div class="sleep-window-heading">
-                <strong data-i18n="sleepWindow">Sleep window</strong>
-                <small data-i18n="sleepWindowDescription">Sleep and wake times · shaded area is time asleep</small>
-              </div>
-              <div id="sleepWindowChart" class="habit-trend-chart sleep-window-chart"></div>
-            </div>
-          </section>
-
-          <section class="insight-section relation-section">
+          <section class="insight-section relation-section dashboard-card">
             <div class="insight-section-heading">
               <div>
                 <h3 data-i18n="relations">Relations</h3>
@@ -191,7 +178,7 @@
             <div id="relationChart" class="habit-trend-chart relation-chart"></div>
           </section>
 
-          <section class="insight-section">
+          <section class="insight-section habit-comparison-section dashboard-card">
             <div class="insight-section-heading">
               <div>
                 <h3 data-i18n="habitsThisMonth">Habits this month</h3>
@@ -200,6 +187,7 @@
             </div>
             <div id="habitComparison" class="habit-comparison"></div>
           </section>
+          </div>
         </aside>
       </section>
     </main>
